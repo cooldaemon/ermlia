@@ -1,0 +1,13 @@
+{application, ermlia, 
+ [{description, "ermlia - Erlang implementation of Kademlia."},
+  {vsn, "%VSN%"},
+  {modules, [
+  ]},
+  {registered, [
+  ]},
+  {applications, [kernel, stdlib]},
+  {mod, {ermlia, []}},
+  {start_phases, []},
+  {env, [
+  ]}
+ ]}.
