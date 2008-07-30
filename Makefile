@@ -22,6 +22,7 @@ all: subdirs
 
 subdirs:
 	cd src; ERMLIA_VSN=$(ERMLIA_VSN) ROOT=$(ROOT) make
+	cd deps/mochiweb/; make
 
 test: test_do
 
@@ -47,7 +48,8 @@ dialyze:
 	cd src; make dialyze
 
 clean:	
-	rm -rf *.beam erl_crash.dump logs/* doc/*
+	rm -rf *.beam erl_crash.dump log/* doc/*
 	cd src; ROOT=$(ROOT) make clean
 	cd test; ROOT=$(ROOT) make clean
+	cd deps/mochiweb/; make clean
 
