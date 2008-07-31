@@ -17,14 +17,12 @@ TEST_SERVER_INCLUDE=$(TEST_SERVER)/include
 COMMON_TEST_INCLUDE=$(COMMON_TEST)/include
 
 SOURCES = $(wildcard *.erl)
-OBJECTS = $(SOURCES:%.erl=$(EBIN)/%.$(EMULATOR))
+OBJECTS = $(SOURCES:%.erl=%.$(EMULATOR))
 
 COMPILE_FLAGS += \
 	+warn_unused_vars +nowarn_shadow_vars +warn_unused_import
 
-.SUFFIXES: .erl .$(EMULATOR)
-
-.erl.$(EMULATOR):
+%.$(EMULATOR): %.erl
 	erlc -W $(COMPILE_FLAGS) \
 		-I$(INCLUDE) -I$(COMMON_TEST_INCLUDE) -I$(TEST_SERVER_INCLUDE) \
 		$<
@@ -35,3 +33,4 @@ compile: $(OBJECTS)
 
 clean:	
 	rm -rf *.$(EMULATOR) erl_crash.dump log/*
+

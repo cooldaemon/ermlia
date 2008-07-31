@@ -22,7 +22,7 @@ all: subdirs
 
 subdirs:
 	cd src; ERMLIA_VSN=$(ERMLIA_VSN) ROOT=$(ROOT) make
-	cd deps/mochiweb/; make
+	cd deps/mochiweb/; make nodoc
 
 test: test_do
 
@@ -33,12 +33,12 @@ test_compile: subdirs
 test_do: test_compile
 	${RUN_TEST_CMD} -dir . \
 		-logdir test/log -cover test/ermlia.coverspec \
-		-I$(ROOT)/include -pa $(ROOT)/ebin
+		-I$(ROOT)/include -pa $(ROOT)/ebin -pa $(ROOT)/deps/mochiweb/ebin
 
 test_single: test_compile
 	${RUN_TEST_CMD} -suite $(SUITE) \
 		-logdir test/log -cover test/ermlia.coverspec \
-		-I$(ROOT)/include -pa $(ROOT)/ebin
+		-I$(ROOT)/include -pa $(ROOT)/ebin -pa $(ROOT)/deps/mochiweb/ebin
 
 docs:
 	erl -noshell -run edoc_run application "'ermlia'" \
