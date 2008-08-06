@@ -35,11 +35,14 @@
 
 %% @equiv application:start(ermlia, permanent)
 start(Port) ->
+  erljob:start(),
   application:set_env(ermlia, port, Port),
   application:start(ermlia, permanent).
 
 %% @equiv application:stop(ermlia)
-stop() -> application:stop(ermlia).
+stop() ->
+  application:stop(ermlia),
+  erljob:stop().
 
 %% @equiv ermlia_facade:join(Host, Port)
 join(Host, Port) -> ermlia_facade:join(Host, Port).

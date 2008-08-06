@@ -23,6 +23,7 @@
 
 -export([start_link/0, stop/0]).
 -export([set/2, set/3, get/1]).
+-export([cleaner/1]).
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -52,7 +53,21 @@ get(Key) -> gen_server:call(?MODULE, {get, Key}).
 %% @spec init(_Args:[]) -> {ok, {Ets:tid()}}
 init(_Args) ->
   process_flag(trap_exit, true),
-  {ok, {ets:new(data_store, [bag, private])}}.
+  Ets = ets:new(ermlia_data_store, [bag, private]),
+  ok = erljob:add_job(
+    ermlia_data_store_cleaner, {?MODULE, cleaner}, Ets, 60000, infinity
+  ),
+  {ok, {Ets}}.
+
+%% @spec cleaner(Ets::tid()) -> tid()
+cleaner(Ets) ->
+  Now = microsecs(),
+  ets:select_delete(Ets, [{
+    {'$1', {'$2', '$3'}},
+    [{'/=', '$3', 0}, {'<', '$3', Now}],
+    ['$2']
+  }]),
+  Ets.
 
 %% @type form() = {pid(), Tag}.
 

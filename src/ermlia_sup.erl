@@ -1,6 +1,6 @@
 %% @author Masahito Ikuta <cooldaemon@gmail.com> [http://d.hatena.ne.jp/cooldaemon/]
 %% @copyright Masahito Ikuta 2008
-%% @doc supervisor
+%% @doc This module is supervisor for the ermlia.
 
 %% Copyright 2008 Masahito Ikuta
 %%
@@ -24,57 +24,22 @@
 -export([start_link/1, stop/0]).
 -export([init/1]).
 
--define(MAX_RESTART, 0).
--define(TIME, 1).
--define(SHUTDOWN_WAITING_TIME, 2000).
+start_link(Args) -> sup_utils:start_link(?MODULE, Args).
+stop() -> sup_utils:stop(?MODULE).
 
-%% @equiv supervisor:start_link({local, ?MODULE}, ?MODULE, Args:[term()])
-start_link(Args) ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, Args).
-
-%% @doc Stop supervisor for ermlia.
-%% @spec stop() -> ok | not_started
-stop() ->
-  case whereis(?MODULE) of
-    Pid when is_pid(Pid) ->
-      exit(Pid, normal),
-      ok;
-    _Other ->
-      not_started
-  end.
-
-%% @doc Callback for supervisor.
-%% @spec init([Port:integer()]) -> {ok, {Option:term(), [ChildSpec:term()]}}
 init([Port]) ->
-  {ok, {{one_for_one, ?MAX_RESTART, ?TIME}, [
-    worker_spec(ermlia_kbukets, []),
-    worker_spec(ermlia_data_store, []),
-    worker_spec(udp_server, receiver_start_link, [
+  sup_utils:spec([
+    {worker, ermlia_kbukets},
+    {worker, ermlia_data_store},
+    {worker, udp_server, receiver_start_link, [
       {local, ermlia_node_pipe},
       ermlia_node_pipe,
       #udp_server_option{port=Port}
-    ]),
-    worker_spec(mochiweb_http, start, [[
+    ]},
+    {worker, mochiweb_http, start, [[
       {port, Port},
       {name, {local, ermlia_web}},
       {loop, {ermlia_web, dispatch}}
-    ]])
-  ]}}.
-
-worker_spec(Module, Args) ->
-  worker_spec(Module, start_link, Args).
-
-worker_spec(Module, Function, Args) ->
-  {
-    Module,
-    {Module, Function, Args},
-    permanent,
-    ?SHUTDOWN_WAITING_TIME,
-    worker,
-    [Module]
-  }.
-
-%supervisor_spec(Module, Args) ->
-%  StartFunc = {Module, start_link, Args},
-%  {Module, StartFunc, permanent, infinity, supervisor, []}.
+    ]]}
+  ]).
 
