@@ -1,7 +1,4 @@
 all:
-	(cd src;$(MAKE))
-
-nodoc:
 	(cd src;$(MAKE) nodoc)
 
 test:
