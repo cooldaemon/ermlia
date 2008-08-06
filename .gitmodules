@@ -1,0 +1,3 @@
+[submodule "deps/erljob"]
+	path = deps/erljob
+	url = git://github.com/cooldaemon/erljob.git
