@@ -15,14 +15,16 @@ ifndef ROOT
 	ROOT=$(shell pwd)
 endif
 
+DEPENDENT_DIRS=$(wildcard $(ROOT)/deps/*)
+
 COMMON_TEST=$(shell erl -noshell -eval 'io:format("~s~n", [code:lib_dir(common_test)]).' -s init stop)
 RUN_TEST_CMD=$(COMMON_TEST)/priv/bin/run_test
 
 all: subdirs
 
 subdirs:
+	for i in $(DEPENDENT_DIRS); do (cd $$i; make); done
 	cd src; ERMLIA_VSN=$(ERMLIA_VSN) ROOT=$(ROOT) make
-	cd deps/mochiweb/; make nodoc
 
 test: test_do
 
@@ -51,5 +53,5 @@ clean:
 	rm -rf *.beam erl_crash.dump log/* doc/*
 	cd src; ROOT=$(ROOT) make clean
 	cd test; ROOT=$(ROOT) make clean
-	cd deps/mochiweb/; make clean
+	for i in $(DEPENDENT_DIRS); do (cd $$i; make clean); done
 
