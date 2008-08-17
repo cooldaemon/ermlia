@@ -21,54 +21,41 @@
 -module(ermlia_kbukets).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0]).
+-export([start_link/1, stop/0]).
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
   terminate/2, code_change/3
 ]).
 
-%% @equiv gen_server:start_link({local, ?MODULE}, ?MODULE, [], [])
-start_link() ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+start_link(I) ->
+  gen_server:start_link(
+    {local, list_to_atom(atom_to_list(?MODULE) ++ "_" ++ integer_to_list(I))},
+    ?MODULE, [I], []
+  ).
 
-%% @equiv gen_server:call(?MODULE, stop)
 stop() ->
   gen_server:call(?MODULE, stop).
 
-%% @spec init(_Args:[]) -> {ok, []}
-init(_Args) ->
+init([I]) ->
   process_flag(trap_exit, true),
-  {ok, []}.
+  {ok, {I, []}}.
 
-%% @type form() = {pid(), Tag}.
-
-%% @doc stop server.
-%% @spec handle_call(stop, _From:from(), State:term()) ->
-%%  {stop, normal, stopped, State:term()}
 handle_call(stop, _From, State) ->
   {stop, normal, stopped, State};
 
-%% @spec handle_call(_Message:term(), _From:from(), State:term()) ->
-%%  {reply, ok, State:term()}.
 handle_call(_Message, _From, State) ->
   {reply, ok, State}.
 
-%% @spec handle_cast(_Message:term(), _State:term()) ->
-%%  {noreply, State:term()}
 handle_cast(_Message, State) ->
   {noreply, State}.
 
-%% @spec handle_cast(_Info:term(), _State:term()) ->
-%%  {noreply, State:term()}
 handle_info(_Info, State) ->
   {noreply, State}.
 
-%% @spec terminate(_Reason:term(), _State:term()) -> ok
 terminate(_Reason, _State) ->
   ok.
 
-%% @spec code_change(_Reason:term(), _State:term()) -> ok
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
 

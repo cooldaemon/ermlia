@@ -1,6 +1,6 @@
 %% @author Masahito Ikuta <cooldaemon@gmail.com> [http://d.hatena.ne.jp/cooldaemon/]
 %% @copyright Masahito Ikuta 2008
-%% @doc This module is supervisor for the ermlia.
+%% @doc This module is supervisor for the k-bukets.
 
 %% Copyright 2008 Masahito Ikuta
 %%
@@ -16,30 +16,25 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(ermlia_sup).
+-module(ermlia_kbukets_sup).
 -behaviour(supervisor).
 
--include("udp_server.hrl"). 
-
--export([start_link/1, stop/0]).
+-export([start_link/0, stop/0]).
 -export([init/1]).
 
-start_link(Args) -> sup_utils:start_link(?MODULE, Args).
+start_link() -> sup_utils:start_link(?MODULE).
 stop() -> sup_utils:stop(?MODULE).
 
-init([Port]) ->
-  sup_utils:spec([
-    {sup, ermlia_kbukets_sup},
-    {worker, ermlia_data_store},
-    {worker, udp_server, receiver_start_link, [
-      {local, ermlia_node_pipe},
-      ermlia_node_pipe,
-      #udp_server_option{port=Port}
-    ]},
-    {worker, mochiweb_http, start, [[
-      {port, Port},
-      {name, {local, ermlia_web}},
-      {loop, {ermlia_web, dispatch}}
-    ]]}
-  ]).
+init(_Args) ->
+  sup_utils:spec(
+    lists:map(fun (I) ->
+      {
+        worker,
+        "ermlia_kbukets_" ++ integer_to_list(I),
+        permanent,
+        ermlia_kbukets,
+        [I]
+      }
+    end, lists:seq(0, 159))
+  ).
 
