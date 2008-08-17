@@ -19,12 +19,25 @@
 -module(ermlia_node_pipe).
 -behaviour(udp_server).
 
--export([handle_call/4, handle_info/1]).
+-export([ping/3]).
+-export([handle_call/4, handle_info/2]).
 
-%% @spec handle_call(
-%%  _Socket:term(), _Address:term(), _Port:term(), _Packet:term()) -> ok
-handle_call(_Socket, _Address, _Port, _Packet) -> ok.
+ping(IP, Port, Callback) ->
+  ermlia_node_pipe ! {ping, {IP, Port, Callback}}.
 
-%% @spec handle_info(_Message:term()) -> ok
-handle_info(_Message) -> ok.
+handle_call(Socket, IP, Port, Packet) ->
+  dispatch(Socket, IP, Port, binary_to_term(Packet)).
+
+handle_info(Socket, {ping, {IP, Port, Callback}}) ->
+  gen_udp:send(Socket, IP, Port, term_to_binary({ping, Callback}));
+
+handle_info(_Socket, _Message) -> ok.
+
+dispatch(Socket, IP, Port, {ping, Callback}) ->
+  gen_udp:send(Socket, IP, Port, term_to_binary({pong, Callback}));
+
+dispatch(_Socket, _IP, _Port, {pong, {Pid, SessionKey}}) ->
+  ermlia_kbukets:pong(Pid, SessionKey);
+
+dispatch(_Socket, _IP, _Port, _Message) -> ok.
 

@@ -31,7 +31,7 @@
 -export([receiver_init/3]).
  
 % Behaviour Callbacks
-behaviour_info(callbacks) -> [{handle_call, 4}, {handle_info, 1}];
+behaviour_info(callbacks) -> [{handle_call, 4}, {handle_info, 2}];
 behaviour_info(_Other) -> undefined.
  
 % Supervisor
@@ -129,7 +129,7 @@ recv(_Active, Socket, Module, Option) ->
       Module:handle_call(Socket, Address, Port, Packet),
       recv(true, Socket, Module, Option);
     OtherMessage ->
-      Module:handle_info(OtherMessage),
+      Module:handle_info(Socket, OtherMessage),
       recv(true, Socket, Module, Option)
   after Option#udp_server_option.recv_timeout ->
     exit({error, udp_timeout})
