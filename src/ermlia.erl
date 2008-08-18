@@ -33,15 +33,15 @@
 -export([join/2]). 
 -export([set/2, get/1]). 
 
-%% @equiv application:start(ermlia, permanent)
+start([Port]) -> start(Port);
+start(Port) when is_atom(Port) -> start(atom_to_list(Port));
+start(Port) when is_list(Port) -> start(list_to_integer(Port));
 start(Port) ->
   erljob:start(),
-  application:set_env(ermlia, port, Port),
-  application:start(ermlia, permanent).
+  ermlia_sup:start_link([Port]).
 
-%% @equiv application:stop(ermlia)
 stop() ->
-  application:stop(ermlia),
+  ermlia_sup:stop(),
   erljob:stop().
 
 %% @equiv ermlia_facade:join(Host, Port)
