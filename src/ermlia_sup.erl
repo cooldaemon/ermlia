@@ -34,7 +34,7 @@ init([Port]) ->
     {worker, udp_server, receiver_start_link, [
       {local, ermlia_node_pipe},
       ermlia_node_pipe,
-      #udp_server_option{port=Port}
+      #udp_server_option{option=[binary, {active, true}], port=Port}
     ]},
     {worker, mochiweb_http, start, [[
       {port, Port},
