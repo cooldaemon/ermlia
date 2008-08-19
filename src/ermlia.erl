@@ -30,19 +30,22 @@
 -module(ermlia).
 
 -export([start/1, stop/0]). 
+-export([start_from_shell/1]). 
+
 -export([join/2]). 
 -export([set/2, get/1]). 
 
-start([Port]) -> start(Port);
-start(Port) when is_atom(Port) -> start(atom_to_list(Port));
-start(Port) when is_list(Port) -> start(list_to_integer(Port));
 start(Port) ->
+  application:set_env(ermlia, port, Port),
   erljob:start(),
-  ermlia_sup:start_link([Port]).
+  application:start(ermlia, permanent).
 
 stop() ->
-  ermlia_sup:stop(),
+  application:stop(ermlia),
   erljob:stop().
+
+start_from_shell([Port]) ->
+  start(list_to_integer(atom_to_list(Port))).
 
 %% @equiv ermlia_facade:join(Host, Port)
 join(Host, Port) -> ermlia_facade:join(Host, Port).

@@ -24,7 +24,7 @@
 %% @equiv ermlia_sup:start_link([Port:integer()])
 start(_Type, _Args) ->
   {ok, Port} = application:get_env(ermlia, port),
-  ermlia_sup:start_link([Port]).
+  ermlia_sup:start_link(Port).
 
 %% @doc Stop application for ermlia.
 %% @spec stop(_State::term()) -> ok

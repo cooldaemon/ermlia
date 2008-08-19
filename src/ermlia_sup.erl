@@ -24,7 +24,7 @@
 -export([start_link/1, stop/0]).
 -export([init/1]).
 
-start_link(Args) -> sup_utils:start_link(?MODULE, Args).
+start_link(Port) -> sup_utils:start_link(?MODULE, [Port]).
 stop() -> sup_utils:stop(?MODULE).
 
 init([Port]) ->

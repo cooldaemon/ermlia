@@ -3,20 +3,18 @@
   {vsn, "%VSN%"},
   {modules, [
     ermlia, ermlia_app, ermlia_sup,
-    ermlia_kbukets, ermlia_data_store, ermlia_facade,
+    ermlia_kbukets_sup, ermlia_kbukets, ermlia_data_store, ermlia_facade,
     ermlia_node_pipe, udp_server,
     ermlia_web
   ]},
   {registered, [
     ermlia_sup,
-    ermlia_kbukets, ermlia_data_store,
+    ermlia_kbukets_sup, ermlia_kbukets, ermlia_data_store,
     ermlia_node_pipe,
     ermlia_web
   ]},
   {applications, [kernel, stdlib, sasl]},
   {mod, {ermlia_app, []}},
   {start_phases, []},
-  {env, [
-    {port, 10000}
-  ]}
+  {env, []}
 ]}.
