@@ -31,6 +31,7 @@ init([Port]) ->
   sup_utils:spec([
     {sup, ermlia_kbukets_sup},
     {sup, ermlia_data_store_sup},
+    {worker, ermlia_facade},
     {worker, udp_server, receiver_start_link, [
       {local, ermlia_node_pipe},
       ermlia_node_pipe,
