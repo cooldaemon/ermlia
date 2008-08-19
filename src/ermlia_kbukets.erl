@@ -35,7 +35,7 @@
 -define(PING_TIMEOUT, 3000000).
 
 start_link(I) ->
-  gen_server:start_link({local, i_to_name(I)}, ?MODULE, [I], []).
+  gen_server:start_link({local, i_to_name(I)}, ?MODULE, [], []).
 
 stop(ServerRef) ->
   gen_server:call(ServerRef, stop).
@@ -58,7 +58,7 @@ ping_timeout(I) ->
 i_to_name(I) ->
   list_to_atom(atom_to_list(?MODULE) ++ "_" ++ integer_to_list(I)).
 
-init([I]) ->
+init(_Args) ->
   process_flag(trap_exit, true),
   {ok, {[], []}}.
 

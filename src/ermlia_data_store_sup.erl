@@ -1,6 +1,6 @@
 %% @author Masahito Ikuta <cooldaemon@gmail.com> [http://d.hatena.ne.jp/cooldaemon/]
 %% @copyright Masahito Ikuta 2008
-%% @doc This module is supervisor for the k-bukets.
+%% @doc This module is supervisor for the data store.
 
 %% Copyright 2008 Masahito Ikuta
 %%
@@ -16,11 +16,11 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(ermlia_kbukets_sup).
+-module(ermlia_data_store_sup).
 -behaviour(supervisor).
 
 -export([start_link/0, stop/0]).
--export([ping_timeout/1]).
+-export([cleaner/1]).
 -export([init/1]).
 
 start_link() ->
@@ -28,16 +28,16 @@ start_link() ->
 
 add_job({ok, _Pid}=Result) ->
   case erljob:add_job(
-    "ermlia_kbukets_ping_timeout",
-    {?MODULE, ping_timeout}, {}, 1000, infinity
+    ermlia_data_store_cleaner,
+    {?MODULE, cleaner}, {}, 60000, infinity
   ) of
     ok    -> Result;
     Other -> stop(), Other
   end;
 add_job(Result) -> Result.
 
-ping_timeout(State) ->
-  lists:foreach(fun ermlia_kbukets:ping_timeout/1, lists:seq(0, 159)),
+cleaner(State) ->
+  lists:foreach(fun ermlia_data_store:clean/1, lists:seq(0, 159)),
   State.
 
 stop() ->
@@ -48,9 +48,9 @@ init(_Args) ->
     lists:map(fun (I) ->
       {
         worker,
-        "ermlia_kbukets_" ++ integer_to_list(I),
+        "ermlia_data_store_" ++ integer_to_list(I),
         permanent,
-        ermlia_kbukets,
+        ermlia_data_store,
         [I]
       }
     end, lists:seq(0, 159))

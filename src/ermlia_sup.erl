@@ -30,7 +30,7 @@ stop() -> sup_utils:stop(?MODULE).
 init([Port]) ->
   sup_utils:spec([
     {sup, ermlia_kbukets_sup},
-    {worker, ermlia_data_store},
+    {sup, ermlia_data_store_sup},
     {worker, udp_server, receiver_start_link, [
       {local, ermlia_node_pipe},
       ermlia_node_pipe,

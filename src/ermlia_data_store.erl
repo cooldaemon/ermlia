@@ -21,89 +21,65 @@
 -module(ermlia_data_store).
 -behaviour(gen_server).
 
--export([start_link/0, stop/0]).
--export([set/2, set/3, get/1]).
--export([cleaner/1]).
+-export([start_link/1, stop/1]).
+-export([set/3, set/4, get/2]).
+-export([clean/1]).
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
   terminate/2, code_change/3
 ]).
 
-%% @equiv gen_server:start_link({local, ?MODULE}, ?MODULE, [], [])
-start_link() ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+start_link(I) ->
+  gen_server:start_link({local, i_to_name(I)}, ?MODULE, [I], []).
 
-%% @equiv gen_server:call(?MODULE, stop)
-stop() -> gen_server:call(?MODULE, stop).
+stop(ServerRef) ->
+  gen_server:call(ServerRef, stop).
 
-%% @equiv set(Key:atom(), Value:term(), 0)
-set(Key, Value) -> set(Key, Value, 0).
+set(I, Key, Value) -> set(I, Key, Value, 0).
 
-%% @spec set(Key:atom(), Value:term(), TTL:integer()) -> ok
-set(Key, Value, TTL) ->
-  gen_server:cast(?MODULE, {set, Key, Value, TTL}).
+set(I, Key, Value, TTL) ->
+  gen_server:cast(i_to_name(I), {set, Key, Value, TTL}).
 
-%% @spec get(Key:atom()) -> Value:term()
-get(Key) -> gen_server:call(?MODULE, {get, Key}).
+get(I, Key) -> gen_server:call(i_to_name(I), {get, Key}).
 
-%% @type tid()
-%%  a table identifier, as returned by ets:new/2
+i_to_name(I) ->
+  list_to_atom(atom_to_list(?MODULE) ++ "_" ++ integer_to_list(I)).
 
-%% @spec init(_Args:[]) -> {ok, {Ets:tid()}}
-init(_Args) ->
+init([I]) ->
   process_flag(trap_exit, true),
-  Ets = ets:new(ermlia_data_store, [bag, private]),
-  ok = erljob:add_job(
-    ermlia_data_store_cleaner, {?MODULE, cleaner}, Ets, 60000, infinity
-  ),
-  {ok, {Ets}}.
+  {ok, {ets:new(i_to_name(I), [bag, private])}}.
 
-%% @spec cleaner(Ets::tid()) -> tid()
-cleaner(Ets) ->
+clean(I) ->
+  gen_server:cast(i_to_name(I), clean).
+  
+handle_call({get, Key}, _From, State={Ets}) ->
+  {reply, lookup(ets:lookup(Ets, Key)), State};
+
+handle_call(stop, _From, State) -> {stop, normal, stopped, State};
+
+handle_call(_Message, _From, State) -> {reply, ok, State}.
+
+handle_cast({set, Key, Value, TTL}, State={Ets}) ->
+  ets:delete(Ets, Key),
+  ets:insert(Ets, {Key, {Value, convert_ttl(TTL)}}),
+  {noreply, State};
+
+handle_cast(clean, State={Ets}) ->
   Now = microsecs(),
   ets:select_delete(Ets, [{
     {'$1', {'$2', '$3'}},
     [{'/=', '$3', 0}, {'<', '$3', Now}],
     ['$2']
   }]),
-  Ets.
-
-%% @type form() = {pid(), Tag}.
-
-%% @spec handle_call({get, Key:atom()}, _From:from(), {Ets:tid()}) ->
-%%  {reply, Value:term(), State:term()}
-handle_call({get, Key}, _From, State={Ets}) ->
-  {reply, lookup(ets:lookup(Ets, Key)), State};
-
-%% @spec handle_call(stop, _From:from(), State:term()) ->
-%%  {stop, normal, stopped, State:term()}
-handle_call(stop, _From, State) -> {stop, normal, stopped, State};
-
-%% @spec handle_call(_Message:term(), _From:from(), State:term()) ->
-%%  {reply, ok, State:term()}.
-handle_call(_Message, _From, State) -> {reply, ok, State}.
-
-%% @spec handle_cast(
-%%    {set, Key:atom(), Value:term(), TTL:integer()}, {Ets:tid()}
-%%  ) -> {noreply, State:term()}
-handle_cast({set, Key, Value, TTL}, State={Ets}) ->
-  ets:delete(Ets, Key),
-  ets:insert(Ets, {Key, {Value, convert_ttl(TTL)}}),
   {noreply, State};
 
-%% @spec handle_cast(_Message:term(), _State:term()) ->
-%%  {noreply, State:term()}
 handle_cast(_Message, State) -> {noreply, State}.
 
-%% @spec handle_cast(_Info:term(), _State:term()) ->
-%%  {noreply, State:term()}
 handle_info(_Info, State) -> {noreply, State}.
 
-%% @spec terminate(_Reason:term(), _State:term()) -> ok
 terminate(_Reason, _State) -> ok.
 
-%% @spec code_change(_Reason:term(), _State:term()) -> {ok, State:term()}
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 microsecs() ->
