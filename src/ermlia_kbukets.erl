@@ -53,18 +53,13 @@ pong(ServerRef, SessionKey) ->
   gen_server:cast(ServerRef, {pong, SessionKey}).
 
 ping_timeout(I) ->
-  gen_server:cast(i_to_name(I), ping_timeout),
-  I.
+  gen_server:cast(i_to_name(I), ping_timeout).
 
 i_to_name(I) ->
   list_to_atom(atom_to_list(?MODULE) ++ "_" ++ integer_to_list(I)).
 
 init([I]) ->
   process_flag(trap_exit, true),
-  ok = erljob:add_job(
-    atom_to_list(i_to_name(I)) ++ "_ping_timeout",
-    {?MODULE, ping_timeout}, I, 1000, infinity
-  ),
   {ok, {[], []}}.
 
 handle_call(lookup, _From, {Nodes, _AddNodes}=State) ->

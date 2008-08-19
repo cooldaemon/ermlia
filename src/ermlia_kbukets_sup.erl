@@ -20,10 +20,28 @@
 -behaviour(supervisor).
 
 -export([start_link/0, stop/0]).
+-export([ping_timeout/1]).
 -export([init/1]).
 
-start_link() -> sup_utils:start_link(?MODULE).
-stop() -> sup_utils:stop(?MODULE).
+start_link() ->
+  add_job(sup_utils:start_link(?MODULE)).
+
+add_job({ok, Pid}=Result) ->
+  case erljob:add_job(
+    "ermlia_kbukets_ping_timeout",
+    {?MODULE, ping_timeout}, {}, 1000, infinity
+  ) of
+    ok    -> Result;
+    Other -> stop(), Other
+  end;
+add_job(Result) -> Result.
+
+ping_timeout(State) ->
+  lists:foreach(fun ermlia_kbukets:ping_timeout/1, lists:seq(0, 159)),
+  State.
+
+stop() ->
+  sup_utils:stop(?MODULE).
 
 init(_Args) ->
   sup_utils:spec(
