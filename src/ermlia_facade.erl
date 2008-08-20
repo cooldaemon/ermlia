@@ -22,7 +22,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
--export([id/0]).
+-export([i/1]).
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -40,8 +40,9 @@ id() ->
 
 init(_Args) ->
   process_flag(trap_exit, true),
-  crypto:start(),
-  {ok, {crypto:rand_bytes(20)}}.
+  ok = crypto:start(),
+  <<ID:160>> = crypto:rand_bytes(20),
+  {ok, {ID}}.
 
 handle_call(id, _From, {ID}=State) ->
   {reply, ID, State};
@@ -59,4 +60,21 @@ handle_info(_Info, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
+
+key_to_id(Key) ->
+ <<ID:160>> = crypto:sha(term_to_binary(Key)),
+ ID.
+
+i(Key) ->
+  i(id(), key_to_id(Key)).
+
+i(ID, KeyID) ->
+  i(ID bxor KeyID, 1 bsl 159, 159).
+
+i(_Digit, _Mask, -1) ->
+  -1;
+i(Digit, Mask, Interval) when Digit band Mask > 0 ->
+  Interval;
+i(Digit, Mask, Interval) ->
+  i(Digit, Mask bsr 1, Interval - 1).
 
