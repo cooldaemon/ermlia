@@ -32,6 +32,7 @@
 ]).
 
 -define(LIST_MAX_LENGTH, 20).
+-define(LOOKUP_MAX_LENGTH, 10).
 -define(PING_TIMEOUT, 3000000).
 
 start_link(I) ->
@@ -44,7 +45,20 @@ add(I, ID, IP, Port) ->
   gen_server:cast(i_to_name(I), {add, {ID, IP, Port}}).
 
 lookup(I) ->
-  gen_server:call(i_to_name(I), lookup).
+  lookup(I, 1, get_nodes(I)).
+
+lookup(_I, Inc, Nodes) when
+  ?LOOKUP_MAX_LENGTH =< length(Nodes);
+  159 < Inc
+->
+  lists:sublist(Nodes, ?LOOKUP_MAX_LENGTH);
+lookup(I, Inc, Nodes) ->
+  lookup(I, Inc + 1, Nodes ++ get_nodes(I - Inc) ++ get_nodes(I + Inc)).
+
+get_nodes(I) when I < 0; 159 < I ->
+  [];
+get_nodes(I) ->
+  gen_server:call(i_to_name(I), get_nodes).
 
 debug(I) ->
   gen_server:call(i_to_name(I), debug).
@@ -62,7 +76,7 @@ init(_Args) ->
   process_flag(trap_exit, true),
   {ok, {[], []}}.
 
-handle_call(lookup, _From, {Nodes, _AddNodes}=State) ->
+handle_call(get_nodes, _From, {Nodes, _AddNodes}=State) ->
   {reply, Nodes, State};
 
 handle_call(debug, _From, {_Nodes, AddNodes}=State) ->
