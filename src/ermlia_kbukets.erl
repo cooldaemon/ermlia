@@ -139,7 +139,7 @@ add_node(
   {[{_ID, IP, Port, _RTT}=Node | NodeTails], AddNodes}
 ) when ?LIST_MAX_LENGTH =< Length ->
   SessionKey = make_ref(),
-  ermlia_node_pipe:ping({self(), SessionKey}, IP, Port),
+  ermlia_facade:ping({self(), SessionKey}, IP, Port),
   {
     NodeTails,
     [{SessionKey, AddNode, Node, now_ms()} | AddNodes]

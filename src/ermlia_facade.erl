@@ -22,7 +22,8 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
--export([i/1]).
+-export([join/2]).
+-export([ping/3, add_node/3, lookup_nodes/1]).
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -35,8 +36,46 @@ start_link() ->
 stop() ->
   gen_server:call(?MODULE, stop).
 
+join(IP, Port) ->
+  add_nodes(ermlia_node_pipe:find_node(IP, Port, id())).
+
+add_nodes(fail) -> fail;
+add_nodes([])   -> ok;
+add_nodes([{ID, IP, Port, _RTT} | Nodes]) ->
+  add_node(ID, IP, Port),
+  add_nodes(Nodes).
+
+ping(IP, Port, Callback) ->
+  ermlia_node_pipe:ping(IP, Port, Callback, id()).
+
+add_node(ID, IP, Port) ->
+  ermlia_kbukets:add(i(ID), ID, IP, Port).
+
+lookup_nodes(ID) ->
+  ermlia_kbukets:lookup(i(ID)).
+
 id() ->
   gen_server:call(?MODULE, id).
+
+key_to_i(Key) ->
+  i(key_to_id(Key)).
+
+i(TargetID) ->
+  i(id(), TargetID).
+
+i(ID, TargetID) ->
+  i(ID bxor TargetID, 1 bsl 159, 159).
+
+i(_Digit, _Mask, -1) ->
+  -1;
+i(Digit, Mask, Interval) when Digit band Mask > 0 ->
+  Interval;
+i(Digit, Mask, Interval) ->
+  i(Digit, Mask bsr 1, Interval - 1).
+
+key_to_id(Key) ->
+  <<ID:160>> = crypto:sha(term_to_binary(Key)),
+  ID.
 
 init(_Args) ->
   process_flag(trap_exit, true),
@@ -60,21 +99,4 @@ handle_info(_Info, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
-
-key_to_id(Key) ->
- <<ID:160>> = crypto:sha(term_to_binary(Key)),
- ID.
-
-i(Key) ->
-  i(id(), key_to_id(Key)).
-
-i(ID, KeyID) ->
-  i(ID bxor KeyID, 1 bsl 159, 159).
-
-i(_Digit, _Mask, -1) ->
-  -1;
-i(Digit, Mask, Interval) when Digit band Mask > 0 ->
-  Interval;
-i(Digit, Mask, Interval) ->
-  i(Digit, Mask bsr 1, Interval - 1).
 

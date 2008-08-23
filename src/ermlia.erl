@@ -7,7 +7,7 @@
 %%  Here's a quick example illustrating how to use ermlia: 
 %%  ```
 %%    ermlia:start(MyPort),
-%%    ermlia:join(Host, Port),
+%%    ermlia:join(IP, Port),
 %%    ermlia:set(Key, Value),
 %%    ermlia:get(Key),
 %%    ermlia:stop()
@@ -47,8 +47,8 @@ stop() ->
 start_from_shell([Port]) ->
   start(list_to_integer(atom_to_list(Port))).
 
-%% @equiv ermlia_facade:join(Host, Port)
-join(Host, Port) -> ermlia_facade:join(Host, Port).
+%% @equiv ermlia_facade:join(IP, Port)
+join(IP, Port) -> ermlia_facade:join(IP, Port).
 
 %% @equiv ermlia_facade:set(Key, Value)
 set(Key, Value) -> ermlia_facade:set(Key, Value).
