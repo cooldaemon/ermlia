@@ -37,13 +37,21 @@ stop() ->
   gen_server:call(?MODULE, stop).
 
 join(IP, Port) ->
-  add_nodes(ermlia_node_pipe:find_node(IP, Port, id())).
+  Nodes = ermlia_node_pipe:find_node(IP, Port, id()),
+  add_nodes(Nodes),
+  find_nodes(Nodes).
 
 add_nodes(fail) -> fail;
 add_nodes([])   -> ok;
 add_nodes([{ID, IP, Port, _RTT} | Nodes]) ->
   add_node(ID, IP, Port),
   add_nodes(Nodes).
+
+find_nodes(fail) -> fail;
+find_nodes([])   -> ok;
+find_nodes([{_ID, IP, Port, _RTT} | Nodes]) ->
+  add_nodes(ermlia_node_pipe:find_node(IP, Port, id())),
+  find_nodes(Nodes).
 
 ping(IP, Port, Callback) ->
   ermlia_node_pipe:ping(IP, Port, Callback, id()).
@@ -55,7 +63,14 @@ lookup_nodes(ID) ->
   ermlia_kbukets:lookup(i(ID)).
 
 id() ->
-  gen_server:call(?MODULE, id).
+  id_cache(erlang:get(ermlia_facade_id)).
+
+id_cache(undefined) ->
+  ID = gen_server:call(?MODULE, id),
+  erlang:put(ermlia_facade_id, ID),
+  ID;
+id_cache(ID) ->
+  ID.
 
 key_to_i(Key) ->
   i(key_to_id(Key)).
