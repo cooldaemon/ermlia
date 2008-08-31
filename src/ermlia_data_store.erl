@@ -22,7 +22,7 @@
 -behaviour(gen_server).
 
 -export([start_link/1, stop/1]).
--export([set/3, set/4, get/2]).
+-export([put/3, put/4, get/2]).
 -export([clean/1]).
 -export([
   init/1,
@@ -36,10 +36,10 @@ start_link(I) ->
 stop(ServerRef) ->
   gen_server:call(ServerRef, stop).
 
-set(I, Key, Value) -> set(I, Key, Value, 0).
+put(I, Key, Value) -> put(I, Key, Value, 0).
 
-set(I, Key, Value, TTL) ->
-  gen_server:cast(i_to_name(I), {set, Key, Value, TTL}).
+put(I, Key, Value, TTL) ->
+  gen_server:cast(i_to_name(I), {put, Key, Value, TTL}).
 
 get(I, Key) -> gen_server:call(i_to_name(I), {get, Key}).
 
@@ -60,7 +60,7 @@ handle_call(stop, _From, State) -> {stop, normal, stopped, State};
 
 handle_call(_Message, _From, State) -> {reply, ok, State}.
 
-handle_cast({set, Key, Value, TTL}, State={Ets}) ->
+handle_cast({put, Key, Value, TTL}, State={Ets}) ->
   ets:delete(Ets, Key),
   ets:insert(Ets, {Key, {Value, convert_ttl(TTL)}}),
   {noreply, State};
