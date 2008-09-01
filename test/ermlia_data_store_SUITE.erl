@@ -25,21 +25,30 @@
 all() -> [testcase1].
 
 init_per_testcase(_TestCase, Config) ->
-  ermlia_data_store:start_link(),
+  erljob:start(),
+  ermlia_data_store_sup:start_link(),
+  erljob:set_interval(ermlia_data_store_cleaner, 1),
   Config.
 
 end_per_testcase(_TestCase, _Config) ->
-  ermlia_data_store:stop(),
+  ermlia_data_store_sup:stop(),
+  erljob:stop(),
   ok.
 
 testcase1() -> [].
 testcase1(_Conf) ->
-  ?assertEqual(ermlia_data_store:get(foo), undefined, case1),
-  ermlia_data_store:set(foo, bar),
-  ?assertEqual(ermlia_data_store:get(foo), bar, case2),
-  ermlia_data_store:set(foo, baz, 3),
-  ?assertEqual(ermlia_data_store:get(foo), baz, case3),
+  ?assertEqual(ermlia_data_store:get(0, foo), undefined, case1),
+
+  ermlia_data_store:put(0, foo, bar),
+  ?assertEqual(ermlia_data_store:get(0, foo), bar, case2),
+
+  ermlia_data_store:put(0, foo, baz, 3),
+  ?assertEqual(ermlia_data_store:get(0, foo), baz, case3),
   timer:sleep(3000),
-  ?assertEqual(ermlia_data_store:get(foo), undefined, case4),
+  ?assertEqual(ermlia_data_store:get(0, foo), undefined, case4),
+
+  ermlia_data_store:put(1, foo, qux),
+  ?assertEqual(ermlia_data_store:get(0, foo), undefined, case5),
+  ?assertEqual(ermlia_data_store:get(1, foo), qux, case6),
   ok.
 

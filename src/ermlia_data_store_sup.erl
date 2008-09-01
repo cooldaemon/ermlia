@@ -41,6 +41,7 @@ cleaner(State) ->
   State.
 
 stop() ->
+  erljob:delete_job(ermlia_data_store_cleaner),
   sup_utils:stop(?MODULE).
 
 init(_Args) ->

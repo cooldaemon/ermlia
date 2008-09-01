@@ -16,6 +16,7 @@ ifndef ROOT
 endif
 
 DEPENDENT_DIRS=$(wildcard $(ROOT)/deps/*)
+DEPENDENT_EBIN_OPTIONS=$(DEPENDENT_DIRS:%=-pa %/ebin)
 
 COMMON_TEST=$(shell erl -noshell -eval 'io:format("~s~n", [code:lib_dir(common_test)]).' -s init stop)
 RUN_TEST_CMD=$(COMMON_TEST)/priv/bin/run_test
@@ -35,12 +36,14 @@ test_compile: subdirs
 test_do: test_compile
 	${RUN_TEST_CMD} -dir . \
 		-logdir test/log -cover test/ermlia.coverspec \
-		-I$(ROOT)/include -pa $(ROOT)/ebin -pa $(ROOT)/deps/mochiweb/ebin
+		-I$(ROOT)/include \
+		-pa $(ROOT)/ebin $(DEPENDENT_EBIN_OPTIONS)
 
 test_single: test_compile
 	${RUN_TEST_CMD} -suite $(SUITE) \
 		-logdir test/log -cover test/ermlia.coverspec \
-		-I$(ROOT)/include -pa $(ROOT)/ebin -pa $(ROOT)/deps/mochiweb/ebin
+		-I$(ROOT)/include \
+		-pa $(ROOT)/ebin $(DEPENDENT_EBIN_OPTIONS)
 
 docs:
 	erl -noshell -run edoc_run application "'ermlia'" \
