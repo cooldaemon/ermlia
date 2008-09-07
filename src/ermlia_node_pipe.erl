@@ -19,14 +19,39 @@
 -module(ermlia_node_pipe).
 -behaviour(udp_server).
 
--export([ping/4, find_node/4, find_value/4, put/6]).
+-include("udp_server.hrl").
+
+-export([start_link/1, stop/0]).
+-export([ping/3, find_node/4, find_value/4, put/6]).
 -export([handle_call/4, handle_info/2]).
 
+-define(PING_TIMEOUT, 3000000).
 -define(FIND_NODE_TIMEOUT, 3000000).
 -define(FIND_VALUE_TIMEOUT, 3000000).
 
-ping(IP, Port, ID, Callback) ->
-  ermlia_node_pipe ! {IP, Port, {ping, ID, Callback}}.
+start_link(Port) ->
+  udp_server:receiver_start_link(
+    {local, ?MODULE},
+    ?MODULE,
+    #udp_server_option{option=[binary, {active, true}], port=Port}
+  ).
+
+stop() ->
+  case whereis(?MODULE) of
+    Pid when is_pid(Pid) ->
+      exit(Pid, normal),
+      ok;
+    _Other ->
+      not_started
+  end.
+
+ping(IP, Port, ID) ->
+  ermlia_node_pipe ! {IP, Port, {ping, ID, self()}},
+  receive
+    pong -> ok
+  after ?PING_TIMEOUT ->
+    fail
+  end.
 
 find_node(IP, Port, ID, TargetID) ->
   find(node, IP, Port, ID, TargetID, ?FIND_NODE_TIMEOUT).
@@ -55,11 +80,11 @@ handle_info(Socket, {IP, Port, Message}) ->
 
 handle_info(_Socket, _Message) -> ok.
 
-dispatch(Socket, IP, Port, {ping, ID, Callback}) ->
-  callback(Socket, IP, Port, ID, {pong, Callback});
+dispatch(Socket, IP, Port, {ping, ID, Pid}) ->
+  callback(Socket, IP, Port, ID, {pong, Pid});
 
-dispatch(_Socket, _IP, _Port, {pong, {Pid, SessionKey}}) ->
-  ermlia_kbukets:pong(Pid, SessionKey);
+dispatch(_Socket, _IP, _Port, {pong, Pid}) ->
+  Pid ! pong;
 
 dispatch(Socket, IP, Port, {find_node, ID, TargetID, PID}) ->
   callback(Socket, IP, Port, ID, {

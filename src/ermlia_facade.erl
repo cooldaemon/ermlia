@@ -24,7 +24,7 @@
 -export([start_link/0, stop/0]).
 -export([put/2, put/3, get/1]).
 -export([join/2]).
--export([ping/3, add_node/3, lookup_nodes/1, find_value/1]).
+-export([ping/2, add_node/3, lookup_nodes/1, find_value/1]).
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -163,11 +163,22 @@ find_nodes(Nodes) ->
     Nodes
   ).
 
-ping(IP, Port, Callback) ->
-  ermlia_node_pipe:ping(IP, Port, id(), Callback).
-
 add_node(ID, IP, Port) ->
-  ermlia_kbukets:add(i(ID), ID, IP, Port).
+  I = i(ID),
+  ping_pong(I, ermlia_kbukets:add(I, ID, IP, Port)).
+
+ping_pong(I, {buckets_is_full, SessionKey, {_ID, IP, Port, _RTT}}) ->
+  pong(I, SessionKey, ping(IP, Port));
+ping_pong(_I, _Other) ->
+  ok.
+
+ping(IP, Port) ->
+  ermlia_node_pipe:ping(IP, Port, id()).
+
+pong(I, SessionKey, ok) ->
+  ermlia_kbukets:pong(I, SessionKey);
+pong(_I, _SessionKey, _Other) ->
+  ok.
 
 lookup_nodes(ID) ->
   ermlia_kbukets:lookup(i(ID)).

@@ -28,7 +28,7 @@ start_link() ->
 
 add_job({ok, _Pid}=Result) ->
   case erljob:add_job(
-    "ermlia_kbukets_ping_timeout",
+    ermlia_kbukets_ping_timeout,
     {?MODULE, ping_timeout}, {}, 1000, infinity
   ) of
     ok    -> Result;
@@ -41,6 +41,7 @@ ping_timeout(State) ->
   State.
 
 stop() ->
+  erljob:delete_job(ermlia_kbukets_ping_timeout),
   sup_utils:stop(?MODULE).
 
 init(_Args) ->

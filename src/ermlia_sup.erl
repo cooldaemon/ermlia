@@ -19,8 +19,6 @@
 -module(ermlia_sup).
 -behaviour(supervisor).
 
--include("udp_server.hrl"). 
-
 -export([start_link/1, stop/0]).
 -export([init/1]).
 
@@ -32,11 +30,7 @@ init([Port]) ->
     {sup, ermlia_kbukets_sup},
     {sup, ermlia_data_store_sup},
     {worker, ermlia_facade},
-    {worker, udp_server, receiver_start_link, [
-      {local, ermlia_node_pipe},
-      ermlia_node_pipe,
-      #udp_server_option{option=[binary, {active, true}], port=Port}
-    ]},
+    {worker, ermlia_node_pipe, [Port]},
     {worker, mochiweb_http, start, [[
       {port, Port},
       {name, {local, ermlia_web}},

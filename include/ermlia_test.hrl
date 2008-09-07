@@ -18,9 +18,10 @@
 
 -define(assertEqual(Expr, Expect, Message), 
   (fun () ->
+    ExpectResult = Expect,
     case Expr of
-      Expect -> ok;
-      Other  -> ct:fail({Message, Other})
+      ExpectResult -> ok;
+      Other        -> ct:fail({Message, Other})
     end
   end)()
 ).

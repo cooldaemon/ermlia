@@ -23,7 +23,6 @@
 
 -export([start_link/1, stop/1]).
 -export([add/4, lookup/1]).
--export([debug/1]).
 -export([pong/2, ping_timeout/1]).
 -export([
   init/1,
@@ -32,7 +31,7 @@
 ]).
 
 -define(LIST_MAX_LENGTH, 20).
--define(LOOKUP_MAX_LENGTH, 10).
+-define(LOOKUP_MAX_LENGTH, 20).
 -define(PING_TIMEOUT, 3000000).
 
 start_link(I) ->
@@ -42,7 +41,7 @@ stop(ServerRef) ->
   gen_server:call(ServerRef, stop).
 
 add(I, ID, IP, Port) ->
-  gen_server:cast(i_to_name(I), {add, {ID, IP, Port}}).
+  gen_server:call(i_to_name(I), {add, {ID, IP, Port}}).
 
 lookup(I) ->
   lookup(I, 1, get_nodes(I)).
@@ -60,11 +59,8 @@ get_nodes(I) when I < 0; 159 < I ->
 get_nodes(I) ->
   gen_server:call(i_to_name(I), get_nodes).
 
-debug(I) ->
-  gen_server:call(i_to_name(I), debug).
-
-pong(ServerRef, SessionKey) ->
-  gen_server:cast(ServerRef, {pong, SessionKey}).
+pong(I, SessionKey) ->
+  gen_server:cast(i_to_name(I), {pong, SessionKey}).
 
 ping_timeout(I) ->
   gen_server:cast(i_to_name(I), ping_timeout).
@@ -79,25 +75,23 @@ init(_Args) ->
 handle_call(get_nodes, _From, {Nodes, _AddNodes}=State) ->
   {reply, Nodes, State};
 
-handle_call(debug, _From, {_Nodes, AddNodes}=State) ->
-  {reply, AddNodes, State};
-
 handle_call(stop, _From, State) ->
   {stop, normal, stopped, State};
 
-handle_call(_Message, _From, State) ->
-  {reply, ok, State}.
-
-handle_cast(
+handle_call(
   {add, {ID, _IP, _Port}=AddNode},
+  _From,
   {Nodes, AddNodes}=State
 ) ->
-  {noreply, add_node(
+  add_node(
     lists:keymember(ID, 1, Nodes),
     length(Nodes ++ AddNodes),
     AddNode,
     State
-  )};
+  );
+
+handle_call(_Message, _From, State) ->
+  {reply, ok, State}.
 
 handle_cast({pong, SessionKey}, {_Nodes, AddNodes}=State) ->
   {noreply, add_node_from_adding_list(
@@ -136,13 +130,13 @@ add_node(
   _NoExist,
   Length,
   AddNode,
-  {[{_ID, IP, Port, _RTT}=Node | NodeTails], AddNodes}
+  {[Node | NodeTails], AddNodes}
 ) when ?LIST_MAX_LENGTH =< Length ->
   SessionKey = make_ref(),
-  ermlia_facade:ping({self(), SessionKey}, IP, Port),
   {
-    NodeTails,
-    [{SessionKey, AddNode, Node, now_ms()} | AddNodes]
+    reply,
+    {buckets_is_full, SessionKey, Node},
+    {NodeTails, [{SessionKey, AddNode, Node, now_ms()} | AddNodes]}
   };
 add_node(
   _NoExist,
@@ -150,12 +144,12 @@ add_node(
   {ID, IP, Port},
   {Nodes, AddNodes}
 ) ->
-  {lists:append(Nodes, [{ID, IP, Port, unknown}]), AddNodes}.
+  {reply, ok, {lists:append(Nodes, [{ID, IP, Port, unknown}]), AddNodes}}.
 
 add_node_from_adding_list(false, State) ->
   State;
 add_node_from_adding_list(
-  {SessionKey, _AddNode, {ID, IP, Port, _RTT}, PingTime},
+  {value, {SessionKey, _AddNode, {ID, IP, Port, _RTT}, PingTime}},
   {Nodes, AddNodes}
 ) ->
   {
