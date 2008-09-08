@@ -22,6 +22,7 @@
 -export([pmap/2, pmap/3, pmap/4]).
 -export([pmap_coordinator/4, pmap_supervisor/4, pmap_worker/3]).
 -export([split/2, split_map/3, split_foldl/4]).
+-export([concat_atom/1]).
 -export([test/0]).
 
 -define(SUPERVISOR_TIMEOUT, 500).
@@ -126,11 +127,26 @@ split_foldl_loop(_Fun, Acc, _N, {[], []}) ->
 split_foldl_loop(Fun, Acc, N, {Args, Lists}) ->
   split_foldl_loop(Fun, eval(Fun, [Args, Acc]), N, split(N, Lists)).
 
+concat_atom(Lists) ->
+  concat_atom(Lists, []).
+
+concat_atom([], Results) ->
+  list_to_atom(Results);
+concat_atom([Elem | Lists], Results) when is_atom(Elem) ->
+  concat_atom(Lists, Results ++ atom_to_list(Elem));
+concat_atom([Elem | Lists], Results) when is_integer(Elem) ->
+  concat_atom(Lists, Results ++ integer_to_list(Elem));
+concat_atom([Elem | Lists], Results) when is_list(Elem) ->
+  concat_atom(Lists, Results ++ Elem);
+concat_atom([_Elem | Lists], Results) ->
+  concat_atom(Lists, Results).
+
 test() ->
   test_pmap(),
   test_split(),
   test_split_map(),
   test_split_foldl(),
+  test_concat_atom(),
   ok.
 
 test_pmap() ->
@@ -168,5 +184,9 @@ test_split_foldl() ->
     2,
     lists:seq(1, 10)
   ),
+  ok.
+
+test_concat_atom() ->
+  abc123foo = concat_atom([abc, 123, "foo", {}, self()]),
   ok.
 

@@ -90,7 +90,8 @@ testcase1(_Conf) ->
   {buckets_is_full, _SessionKey2, Node2} = add_node(23),
   ?assertEqual(Node2, get_node(2), case16),
 
-  timer:sleep(4000),
+  erljob:set_interval(ermlia_kbukets_ping_timeout, 100),
+  timer:sleep(3500),
   ?assertEqual(lists:last(ermlia_kbukets:lookup(0)), get_node(23), case17),
 
   ok.

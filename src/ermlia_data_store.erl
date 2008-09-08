@@ -44,7 +44,7 @@ put(I, Key, Value, TTL) ->
 get(I, Key) -> gen_server:call(i_to_name(I), {get, Key}).
 
 i_to_name(I) ->
-  list_to_atom(atom_to_list(?MODULE) ++ "_" ++ integer_to_list(I)).
+  list_utils:concat_atom([?MODULE, "_", I]).
 
 init([I]) ->
   process_flag(trap_exit, true),

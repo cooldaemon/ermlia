@@ -66,7 +66,7 @@ ping_timeout(I) ->
   gen_server:cast(i_to_name(I), ping_timeout).
 
 i_to_name(I) ->
-  list_to_atom(atom_to_list(?MODULE) ++ "_" ++ integer_to_list(I)).
+  list_utils:concat_atom([?MODULE, "_", I]).
 
 init(_Args) ->
   process_flag(trap_exit, true),

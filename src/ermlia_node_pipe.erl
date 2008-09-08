@@ -60,8 +60,8 @@ find_value(IP, Port, ID, Key) ->
   find(value, IP, Port, ID, Key, ?FIND_VALUE_TIMEOUT).
 
 find(Method, IP, Port, ID, Target, Timeout) ->
-  Message = list_to_atom("find_" ++ atom_to_list(Method)),
-  AckMessage = list_to_atom("ack_" ++ atom_to_list(Message)),
+  Message = list_utils:concat_atom(["find_", Method]),
+  AckMessage = list_utils:concat_atom(["ack_", Message]),
   ermlia_node_pipe ! {IP, Port, {Message, ID, Target, self()}},
   receive
     {AckMessage, Result} -> Result
@@ -73,7 +73,8 @@ put(IP, Port, ID, Key, Value, TTL) ->
   ermlia_node_pipe ! {IP, Port, {put, ID, Key, Value, TTL}}.
 
 handle_call(Socket, IP, Port, Packet) ->
-  dispatch(Socket, IP, Port, binary_to_term(Packet)).
+  spawn_link(?MODULE, dispatch, [Socket, IP, Port, binary_to_term(Packet)]),
+  ok.
 
 handle_info(Socket, {IP, Port, Message}) ->
   gen_udp:send(Socket, IP, Port, term_to_binary(Message));
