@@ -20,6 +20,5 @@
 
 -export([dispatch/1]).
 
-%% @spec dispatch(Req:term()) -> response()
 dispatch(Req) -> Req:not_found().
 

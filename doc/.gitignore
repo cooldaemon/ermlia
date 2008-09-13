@@ -1,2 +1,4 @@
-*.beam
-erl_crash.dump
+*.html
+*.css
+*.png
+edoc-info

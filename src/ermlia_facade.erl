@@ -22,9 +22,8 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
--export([put/2, put/3, get/1]).
--export([join/2]).
--export([ping/2, add_node/3, lookup_nodes/1, find_value/1]).
+-export([publish/2, publish/3, get/1, join/2]).          % for local
+-export([add_node/3, find_node/1, find_value/1, put/3]). % for remote
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -40,13 +39,12 @@ start_link() ->
 stop() ->
   gen_server:call(?MODULE, stop).
 
-put(Key, Value) ->
-  put(Key, Value, 0).
+publish(Key, Value) ->
+  publish(Key, Value, 0).
 
-put(Key, Value, TTL) ->
-  KeyID = key_to_id(Key),
-  ermlia_data_store:put(KeyID, Key, Value, TTL),
-  publish(lookup_nodes(KeyID), Key, Value, TTL).
+publish(Key, Value, TTL) ->
+  put(Key, Value, TTL),
+  publish(find_node(key_to_id(Key)), Key, Value, TTL).
 
 publish([], _Key, _Value, _TTL) ->
   ok;
@@ -180,16 +178,19 @@ pong(I, SessionKey, ok) ->
 pong(_I, _SessionKey, _Other) ->
   ok.
 
-lookup_nodes(ID) ->
+find_node(ID) ->
   ermlia_kbukets:lookup(i(ID)).
 
 find_value(Key) ->
   find_value(ermlia_data_store:get(key_to_i(Key), Key), Key).
 
 find_value(undefined, Key) ->
-  {nodes, lookup_nodes(key_to_id(Key))};
+  {nodes, find_node(key_to_id(Key))};
 find_value(Value, _Key) ->
   {value, Value}.
+
+put(Key, Value, TTL) ->
+  ermlia_data_store:put(key_to_id(Key), Key, Value, TTL).
 
 id() ->
   id_cache(erlang:get(ermlia_facade_id)).

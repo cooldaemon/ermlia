@@ -1,2 +1,2 @@
-*.beam
-erl_crash.dump
+index
+[1-9]*

@@ -46,12 +46,7 @@ stop() ->
   end.
 
 ping(IP, Port, ID) ->
-  ermlia_node_pipe ! {IP, Port, {ping, ID, self()}},
-  receive
-    pong -> ok
-  after ?PING_TIMEOUT ->
-    fail
-  end.
+  send_and_recv(IP, Port, {ping, ID}, pong, ?PING_TIMEOUT).
 
 find_node(IP, Port, ID, TargetID) ->
   find(node, IP, Port, ID, TargetID, ?FIND_NODE_TIMEOUT).
@@ -62,7 +57,10 @@ find_value(IP, Port, ID, Key) ->
 find(Method, IP, Port, ID, Target, Timeout) ->
   Message = list_utils:concat_atom(["find_", Method]),
   AckMessage = list_utils:concat_atom(["ack_", Message]),
-  ermlia_node_pipe ! {IP, Port, {Message, ID, Target, self()}},
+  send_and_recv(IP, Port, {Message, ID, Target}, AckMessage, Timeout).
+
+send_and_recv(IP, Port, Message, AckMessage, Timeout) ->
+  ermlia_node_pipl ! {IP, Port, erlang:append_element(Message, self())},
   receive
     {AckMessage, Result} -> Result
   after Timeout ->
@@ -85,19 +83,19 @@ dispatch(Socket, IP, Port, {ping, ID, Pid}) ->
   callback(Socket, IP, Port, ID, {pong, Pid});
 
 dispatch(_Socket, _IP, _Port, {pong, Pid}) ->
-  Pid ! pong;
+  Pid ! {pong, ok};
 
-dispatch(Socket, IP, Port, {find_node, ID, TargetID, PID}) ->
+dispatch(Socket, IP, Port, {find_node, ID, TargetID, Pid}) ->
   callback(Socket, IP, Port, ID, {
-    ack_find_node, ermlia_facade:lookup_nodes(TargetID), PID
+    ack_find_node, ermlia_facade:find_node(TargetID), Pid
   });
 
-dispatch(_Socket, _IP, _Port, {ack_find_node, Nodes, PID}) ->
-  PID ! {ack_find_node, Nodes};
+dispatch(_Socket, _IP, _Port, {ack_find_node, Nodes, Pid}) ->
+  Pid ! {ack_find_node, Nodes};
 
-dispatch(Socket, IP, Port, {find_value, ID, Key, PID}) ->
+dispatch(Socket, IP, Port, {find_value, ID, Key, Pid}) ->
   callback(Socket, IP, Port, ID, {
-    ack_find_value, ermlia_facade:find_value(Key), PID
+    ack_find_value, ermlia_facade:find_value(Key), Pid
   });
 
 dispatch(_Socket, IP, Port, {put, ID, Key, Value, TTL}) ->
