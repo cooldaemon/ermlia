@@ -1,0 +1,51 @@
+%% @author Masahito Ikuta <cooldaemon@gmail.com> [http://d.hatena.ne.jp/cooldaemon/]
+%% @copyright Masahito Ikuta 2008
+%% @doc This module is mock data store manager.
+%%
+%%  This module is facade mock for k-buckets and data store.
+
+%% Copyright 2008 Masahito Ikuta
+%%
+%% Licensed under the Apache License, Version 2.0 (the "License");
+%% you may not use this file except in compliance with the License.
+%% You may obtain a copy of the License at
+%%
+%% http://www.apache.org/licenses/LICENSE-2.0
+%%
+%% Unless required by applicable law or agreed to in writing, software
+%% distributed under the License is distributed on an "AS IS" BASIS,
+%% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%% See the License for the specific language governing permissions and
+%% limitations under the License.
+
+-module(ermlia_mock_facade).
+
+-export([setup/0]).
+%-export([publish/2, publish/3, get/1, join/2]).          % for local
+-export([add_node/3, find_node/1, find_value/1, put/3]). % for remote
+
+setup() ->
+  {ok, Self} = smerl:for_module(?MODULE),
+  smerl:compile(smerl:set_module(Self, ermlia_facade)).
+
+add_node(_ID, _IP, _Port) ->
+  ok.
+
+find_node(1) ->
+  [
+    {1, {127, 0, 0, 1}, 10001, unknown},
+    {2, {127, 0, 0, 1}, 10002, unknown}
+  ];
+find_node(_ID) ->
+  [].
+
+find_value(foo) ->
+  {value, foo_value};
+find_value(bar) ->
+  {nodes, find_node(1)};
+find_value(_Key) ->
+  {nodes, []}.
+
+put(_Key, _Value, _TTL) ->
+  ok.
+

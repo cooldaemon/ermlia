@@ -24,10 +24,11 @@
 -export([start_link/1, stop/0]).
 -export([ping/3, find_node/4, find_value/4, put/6]).
 -export([handle_call/4, handle_info/2]).
+-export([dispatch/4]).
 
--define(PING_TIMEOUT, 3000000).
--define(FIND_NODE_TIMEOUT, 3000000).
--define(FIND_VALUE_TIMEOUT, 3000000).
+-define(PING_TIMEOUT, 3000).
+-define(FIND_NODE_TIMEOUT, 3000).
+-define(FIND_VALUE_TIMEOUT, 3000).
 
 start_link(Port) ->
   udp_server:receiver_start_link(
@@ -60,7 +61,7 @@ find(Method, IP, Port, ID, Target, Timeout) ->
   send_and_recv(IP, Port, {Message, ID, Target}, AckMessage, Timeout).
 
 send_and_recv(IP, Port, Message, AckMessage, Timeout) ->
-  ermlia_node_pipl ! {IP, Port, erlang:append_element(Message, self())},
+  ?MODULE ! {IP, Port, erlang:append_element(Message, self())},
   receive
     {AckMessage, Result} -> Result
   after Timeout ->
@@ -68,7 +69,7 @@ send_and_recv(IP, Port, Message, AckMessage, Timeout) ->
   end.
 
 put(IP, Port, ID, Key, Value, TTL) ->
-  ermlia_node_pipe ! {IP, Port, {put, ID, Key, Value, TTL}}.
+  ?MODULE ! {IP, Port, {put, ID, Key, Value, TTL}}.
 
 handle_call(Socket, IP, Port, Packet) ->
   spawn_link(?MODULE, dispatch, [Socket, IP, Port, binary_to_term(Packet)]),
