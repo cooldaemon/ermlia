@@ -69,7 +69,8 @@ send_and_recv(IP, Port, Message, AckMessage, Timeout) ->
   end.
 
 put(IP, Port, ID, Key, Value, TTL) ->
-  ?MODULE ! {IP, Port, {put, ID, Key, Value, TTL}}.
+  ?MODULE ! {IP, Port, {put, ID, Key, Value, TTL}},
+  ok.
 
 handle_call(Socket, IP, Port, Packet) ->
   spawn_link(?MODULE, dispatch, [Socket, IP, Port, binary_to_term(Packet)]),
@@ -98,6 +99,9 @@ dispatch(Socket, IP, Port, {find_value, ID, Key, Pid}) ->
   callback(Socket, IP, Port, ID, {
     ack_find_value, ermlia_facade:find_value(Key), Pid
   });
+
+dispatch(_Socket, _IP, _Port, {ack_find_value, Value, Pid}) ->
+  Pid ! {ack_find_value, Value};
 
 dispatch(_Socket, IP, Port, {put, ID, Key, Value, TTL}) ->
   ermlia_facade:add_node(ID, IP, Port),

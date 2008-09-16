@@ -16,12 +16,23 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+-define(_ASSERT(Expr, Expect, Message), 
+  case Expr of
+    Expect -> ok;
+    Other  -> ct:fail({Message, Other})
+  end
+).
+
 -define(assertEqual(Expr, Expect, Message), 
   (fun () ->
     ExpectResult = Expect,
-    case Expr of
-      ExpectResult -> ok;
-      Other        -> ct:fail({Message, Other})
-    end
+    ?_ASSERT(Expr, ExpectResult, Message)
   end)()
 ).
+
+-define(assertMatch(Expr, Expect, Message), 
+  (fun () ->
+    ?_ASSERT(Expr, Expect, Message)
+  end)()
+).
+

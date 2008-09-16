@@ -39,7 +39,22 @@ end_per_testcase(_TestCase, _Config) ->
 
 testcase1() -> [].
 testcase1(_Conf) ->
-  ?assertEqual(ermlia_node_pipe:ping(?MOCK_IP, ?MOCK_PORT, 1), ok, case1),
-  ?assertEqual(ermlia_node_pipe:ping(?MOCK_IP, 10002, 1), fail, case2),
+  ?assertMatch(ermlia_node_pipe:ping(?MOCK_IP, ?MOCK_PORT, 1), ok, case1),
+  ?assertMatch(ermlia_node_pipe:ping(?MOCK_IP, 10002, 1), fail, case2),
+
+  ?assertMatch(
+    ermlia_node_pipe:find_node(?MOCK_IP, ?MOCK_PORT, 1, 2),
+    [],
+    case3
+  ),
+
+  ?assertMatch(
+    ermlia_node_pipe:find_value(?MOCK_IP, ?MOCK_PORT, 1, foo),
+    {value, bar},
+    case4
+  ),
+
+  ok = ermlia_node_pipe:put(?MOCK_IP, ?MOCK_PORT, 1, foo, bar, 0),
+
   ok.
 

@@ -51,7 +51,7 @@ dispatch(Socket, IP, Port, {find_node, _ID, _TargetID, Pid}) ->
   callback(Socket, IP, Port, {ack_find_node, [], Pid});
 
 dispatch(Socket, IP, Port, {find_value, _ID, _Key, Pid}) ->
-  callback(Socket, IP, Port, {ack_find_value, {value, foo}, Pid});
+  callback(Socket, IP, Port, {ack_find_value, {value, bar}, Pid});
 
 dispatch(_Socket, _IP, _Port, _Message) -> ok.
 
