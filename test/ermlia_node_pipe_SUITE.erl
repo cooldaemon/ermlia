@@ -35,6 +35,8 @@ init_per_testcase(_TestCase, Config) ->
 
 end_per_testcase(_TestCase, _Config) ->
   ermlia_node_pipe:stop(),
+  ermlia_mock_node:stop(),
+  ermlia_mock_facade:cleanup(),
   ok.
 
 testcase1() -> [].

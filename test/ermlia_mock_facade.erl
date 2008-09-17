@@ -20,13 +20,20 @@
 
 -module(ermlia_mock_facade).
 
--export([setup/0]).
+-export([setup/0, cleanup/0]).
 %-export([publish/2, publish/3, get/1, join/2]).          % for local
 -export([add_node/3, find_node/1, find_value/1, put/3]). % for remote
 
+-define(REAL_MODULE, ermlia_facade).
+
+
 setup() ->
-  {ok, Self} = smerl:for_module(?MODULE),
-  smerl:compile(smerl:set_module(Self, ermlia_facade)).
+  {ok, Mock} = smerl:for_module(?MODULE),
+  smerl:compile(smerl:set_module(Mock, ?REAL_MODULE)).
+
+cleanup() ->
+  code:purge(?REAL_MODULE),
+  code:load_file(?REAL_MODULE).
 
 add_node(_ID, _IP, _Port) ->
   ok.
