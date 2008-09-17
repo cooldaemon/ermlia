@@ -46,7 +46,7 @@ testcase1(_Conf) ->
 
   ?assertEqual(
     lists:map(fun (N) -> add_node(N, N) end, [4, 3]),
-    cycle(ok, 2),
+    list_utils:cycle(ok, 2),
     case6
   ),
 
@@ -57,14 +57,14 @@ testcase1(_Conf) ->
     case8
   ),
 
-  ?assertEqual(add_nodes(6, 20), cycle(ok, 15), case9),
+  ?assertEqual(add_nodes(6, 20), list_utils:cycle(ok, 15), case9),
   ?assertEqual(
     ermlia_kbukets:lookup(0),
     get_nodes(1, 2) ++ get_nodes(5, 20) ++ get_nodes(3, 4),
     case10
   ),
 
-  ?assertEqual(add_nodes(21, 22), cycle(ok, 2), case11),
+  ?assertEqual(add_nodes(21, 22), list_utils:cycle(ok, 2), case11),
   ?assertEqual(
     ermlia_kbukets:lookup(0),
     get_nodes(1, 2) ++ get_nodes(5, 22),
@@ -110,7 +110,4 @@ add_node(N) ->
 
 add_node(I, N) ->
   ermlia_kbukets:add(I, N, {127, 0, 0, 1}, 10000 + N).
-
-cycle(Elem, Count) ->
-  lists:flatten(lists:map(fun (_N) -> Elem end, lists:seq(1, Count))).
 

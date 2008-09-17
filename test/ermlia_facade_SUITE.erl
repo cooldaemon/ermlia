@@ -22,6 +22,9 @@
 -include("ct.hrl").
 -include("ermlia_test.hrl").
 
+-define(IP, {127, 0, 0, 1}).
+
+
 all() -> [testcase1].
 
 init_per_testcase(_TestCase, Config) ->
@@ -42,5 +45,13 @@ end_per_testcase(_TestCase, _Config) ->
 
 testcase1() -> [].
 testcase1(_Conf) ->
+  ?assertEqual(add_nodes(1, 20), list_utils:cycle(ok, 20), case1),
+
   ok.
+
+add_nodes(H, T) ->
+  lists:map(fun (N) -> add_node(N) end, lists:seq(H, T)).
+
+add_node(N) ->
+  ermlia_facade:add_node(1, ?IP, 10000 + N).
 

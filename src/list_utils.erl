@@ -23,6 +23,7 @@
 -export([pmap_coordinator/4, pmap_supervisor/4, pmap_worker/3]).
 -export([split/2, split_map/3, split_foldl/4]).
 -export([concat_atom/1]).
+-export([cycle/2]).
 -export([test/0]).
 
 -define(SUPERVISOR_TIMEOUT, 500).
@@ -141,12 +142,16 @@ concat_atom([Elem | Lists], Results) when is_list(Elem) ->
 concat_atom([_Elem | Lists], Results) ->
   concat_atom(Lists, Results).
 
+cycle(Elem, Count) ->
+  lists:flatten(lists:map(fun (_N) -> Elem end, lists:seq(1, Count))).
+
 test() ->
   test_pmap(),
   test_split(),
   test_split_map(),
   test_split_foldl(),
   test_concat_atom(),
+  test_cycle(),
   ok.
 
 test_pmap() ->
@@ -188,5 +193,11 @@ test_split_foldl() ->
 
 test_concat_atom() ->
   abc123foo = concat_atom([abc, 123, "foo", {}, self()]),
+  ok.
+
+test_cycle() ->
+  [a, a, a, a, a] = cycle(a, 5),
+  "bbbbb" = cycle("b", 5),
+  [{c}, {c}, {c}, {c}, {c}] = cycle({c}, 5),
   ok.
 
