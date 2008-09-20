@@ -22,6 +22,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
+-export([set_id/1]).                                     % for test
 -export([publish/2, publish/3, get/1, join/2]).          % for local
 -export([add_node/3, find_node/1, find_value/1, put/3]). % for remote
 -export([
@@ -38,6 +39,9 @@ start_link() ->
 
 stop() ->
   gen_server:call(?MODULE, stop).
+
+set_id(ID) ->
+  gen_server:cast(?MODULE, {set_id, ID}).
 
 publish(Key, Value) ->
   publish(Key, Value, 0).
@@ -190,7 +194,7 @@ find_value(Value, _Key) ->
   {value, Value}.
 
 put(Key, Value, TTL) ->
-  ermlia_data_store:put(key_to_id(Key), Key, Value, TTL).
+  ermlia_data_store:put(key_to_i(Key), Key, Value, TTL).
 
 id() ->
   id_cache(erlang:get(ermlia_facade_id)).
@@ -237,11 +241,18 @@ handle_call(stop, _From, State) ->
 handle_call(_Message, _From, State) ->
   {reply, ok, State}.
 
-handle_cast(_Message, State) -> {noreply, State}.
+handle_cast({set_id, ID}, _State) ->
+  {noreply, {ID}};
 
-handle_info(_Info, State) -> {noreply, State}.
+handle_cast(_Message, State) ->
+  {noreply, State}.
 
-terminate(_Reason, _State) -> ok.
+handle_info(_Info, State) ->
+  {noreply, State}.
 
-code_change(_OldVsn, State, _Extra) -> {ok, State}.
+terminate(_Reason, _State) ->
+  ok.
+
+code_change(_OldVsn, State, _Extra) ->
+  {ok, State}.
 

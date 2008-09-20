@@ -33,6 +33,7 @@ init_per_testcase(_TestCase, Config) ->
   ermlia_kbukets_sup:start_link(),
   ermlia_mock_node_pipe:setup(),
   ermlia_facade:start_link(),
+  ermlia_facade:set_id(1),
   Config.
 
 end_per_testcase(_TestCase, _Config) ->
@@ -45,7 +46,24 @@ end_per_testcase(_TestCase, _Config) ->
 
 testcase1() -> [].
 testcase1(_Conf) ->
-  ?assertEqual(add_nodes(1, 20), list_utils:cycle(ok, 20), case1),
+  ?assertEqual(add_nodes(32, 51), list_utils:cycle(ok, 20), case1),
+  ?assertEqual(ermlia_facade:find_node(32), get_nodes(32, 51), case2),
+
+  ?assertEqual(
+    ermlia_facade:find_value(foo),
+    {nodes, get_nodes(32, 51)},
+    case3
+  ),
+
+  ?assertEqual(ermlia_facade:put(foo, bar, 0), ok, case4),
+  ?assertEqual(ermlia_facade:find_value(foo), {value, bar}, case5),
+
+  ?assertEqual(add_node(52), ok, case6),
+  ?assertMatch(
+    lists:last(ermlia_facade:find_node(32)),
+    {32, ?IP, 10032, _RTT},
+    case7
+  ),
 
   ok.
 
@@ -53,5 +71,11 @@ add_nodes(H, T) ->
   lists:map(fun (N) -> add_node(N) end, lists:seq(H, T)).
 
 add_node(N) ->
-  ermlia_facade:add_node(1, ?IP, 10000 + N).
+  ermlia_facade:add_node(N, ?IP, 10000 + N).
+
+get_nodes(H, T) ->
+  lists:map(fun (N) -> get_node(N) end, lists:seq(H, T)).
+
+get_node(N) ->
+  {N, ?IP, 10000 + N, unknown}.
 
