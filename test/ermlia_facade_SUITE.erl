@@ -23,9 +23,10 @@
 -include("ermlia_test.hrl").
 
 -define(IP, {127, 0, 0, 1}).
+-define(PORT_FOR_REMOTE_TEST, 10000).
+-define(PORT_FOR_LOCAL_TEST, 20000).
 
-
-all() -> [testcase1].
+all() -> [for_remote, for_local].
 
 init_per_testcase(_TestCase, Config) ->
   erljob:start(),
@@ -33,19 +34,21 @@ init_per_testcase(_TestCase, Config) ->
   ermlia_kbukets_sup:start_link(),
   ermlia_mock_node_pipe:setup(),
   ermlia_facade:start_link(),
-  ermlia_facade:set_id(1),
   Config.
 
 end_per_testcase(_TestCase, _Config) ->
   ermlia_facade:stop(),
+  crypto:stop(),
   ermlia_mock_node_pipe:cleanup(),
   ermlia_kbukets_sup:stop(),
   ermlia_data_store_sup:stop(),
   erljob:stop(),
   ok.
 
-testcase1() -> [].
-testcase1(_Conf) ->
+for_remote() -> [].
+for_remote(_Conf) ->
+  ermlia_facade:set_id(1),
+
   ?assertEqual(add_nodes(32, 51), list_utils:cycle(ok, 20), case1),
   ?assertEqual(ermlia_facade:find_node(32), get_nodes(32, 51), case2),
 
@@ -67,15 +70,27 @@ testcase1(_Conf) ->
 
   ok.
 
+for_local() -> [].
+for_local(_Conf) ->
+  ?assertMatch(ermlia_facade:join(?IP, ?PORT_FOR_LOCAL_TEST), ok, case1),
+
+  ?assertMatch(ermlia_facade:publish(foo, bar), ok, case2),
+  ?assertMatch(ermlia_facade:get(foo), bar, case3),
+
+  ?assertMatch(ermlia_facade:get(baz), undefined, case4),
+  ?assertMatch(ermlia_facade:get(quu), quux, case5),
+
+  ok.
+
 add_nodes(H, T) ->
   lists:map(fun (N) -> add_node(N) end, lists:seq(H, T)).
 
 add_node(N) ->
-  ermlia_facade:add_node(N, ?IP, 10000 + N).
+  ermlia_facade:add_node(N, ?IP, ?PORT_FOR_REMOTE_TEST + N).
 
 get_nodes(H, T) ->
   lists:map(fun (N) -> get_node(N) end, lists:seq(H, T)).
 
 get_node(N) ->
-  {N, ?IP, 10000 + N, unknown}.
+  {N, ?IP, ?PORT_FOR_REMOTE_TEST + N, unknown}.
 

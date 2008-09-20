@@ -99,19 +99,7 @@ get(Key, KeyID, TermNodes, Nodes) ->
   ).
 
 merge_nodes(KeyID, Nodes, AddNodes, TermNodes) ->
-  lists:filter(
-    fun ({ID, _IP, _Port, _RTT}) ->
-      CheckID = ID,
-      lists:any(
-        fun ({ID, _IPT, _PortT, _RTTT}) ->
-          if
-            CheckID =:= ID -> false;
-            true           -> true
-          end
-        end,
-        TermNodes
-      )
-    end,
+  filter_nodes(
     lists:sort(
       fun ({IDA, _IPA, _PortA, _RTTA}, {IDB, _IPB, _PortB, _RTTB}) ->
         [IA, IB] = lists:map(fun (ID) -> i(ID, KeyID) end, [IDA, IDB]),
@@ -129,7 +117,26 @@ merge_nodes(KeyID, Nodes, AddNodes, TermNodes) ->
         end,
         Nodes ++ AddNodes
       )
-    )
+    ),
+    TermNodes
+  ).
+
+filter_nodes(SortedNodes, []) ->
+  SortedNodes;
+filter_nodes(SortedNodes, TermNodes) ->
+  lists:filter(
+    fun ({ID, _IP, _Port, _RTT}) ->
+      lists:any(
+        fun ({IDT, _IPT, _PortT, _RTTT}) ->
+          if
+            ID =:= IDT -> false;
+            true       -> true
+          end
+        end,
+        TermNodes
+      )
+    end,
+    SortedNodes
   ).
 
 concat_find_value_results(Results) ->
@@ -163,7 +170,8 @@ find_nodes(Nodes) ->
       add_nodes(ermlia_node_pipe:find_node(IP, Port, MyID, MyID))
     end,
     Nodes
-  ).
+  ),
+  ok.
 
 add_node(ID, IP, Port) ->
   I = i(ID),
