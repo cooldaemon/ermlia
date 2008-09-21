@@ -34,7 +34,7 @@ cleanup() ->
   code:load_file(?REAL_MODULE).
 
 ping(_IP, _Port, _ID) ->
-  ok.
+  1.
 
 find_node(_IP, Port, _ID, _TargetID) when ?PORT =< Port ->
   BasePort = (Port - ?PORT) * 100,

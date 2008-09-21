@@ -152,6 +152,12 @@ concat_find_value_results([_Other | Results], Nodes) ->
   concat_find_value_results(Results, Nodes).
 
 join(IP, Port) ->
+  find_and_add_nodes(IP, Port, ermlia_node_pipe:ping(IP, Port, id())).
+
+find_and_add_nodes(_IP, _Port, fail) ->
+  fail;
+find_and_add_nodes(IP, Port, ID) ->
+  add_node(ID, IP, Port),
   Nodes = ermlia_node_pipe:find_node(IP, Port, id(), id()),
   add_nodes(Nodes),
   find_nodes(Nodes).
