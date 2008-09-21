@@ -42,7 +42,7 @@ end_per_testcase(_TestCase, _Config) ->
 
 testcase1() -> [].
 testcase1(_Conf) ->
-  ?assertMatch(ermlia_node_pipe:ping(?IP, ?MOCK_PORT, 1), ok, case1),
+  ?assertMatch(ermlia_node_pipe:ping(?IP, ?MOCK_PORT, 1), 1, case1),
   ?assertMatch(ermlia_node_pipe:ping(?IP, 10002, 1), fail, case2),
 
   ?assertMatch(
@@ -63,7 +63,7 @@ testcase1(_Conf) ->
     case5
   ),
 
-  ?assertMatch(send_and_recv({ping, 1}), {pong, _Pid}, case6),
+  ?assertMatch(send_and_recv({ping, 1}), {pong, _ID, _Pid}, case6),
 
   ?assertMatch(
     send_and_recv({find_node, 1, 1}),

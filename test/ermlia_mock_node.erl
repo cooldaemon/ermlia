@@ -45,7 +45,7 @@ handle_call(Socket, IP, Port, Packet) ->
   ok.
 
 dispatch(Socket, IP, Port, {ping, _ID, Pid}) ->
-  callback(Socket, IP, Port, {pong, Pid});
+  callback(Socket, IP, Port, {pong, 1, Pid});
 
 dispatch(Socket, IP, Port, {find_node, _ID, _TargetID, Pid}) ->
   callback(Socket, IP, Port, {ack_find_node, [], Pid});

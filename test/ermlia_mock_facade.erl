@@ -21,8 +21,7 @@
 -module(ermlia_mock_facade).
 
 -export([setup/0, cleanup/0]).
-%-export([publish/2, publish/3, get/1, join/2]).          % for local
--export([add_node/3, find_node/1, find_value/1, put/3]). % for remote
+-export([add_node/3, find_node/1, find_value/1, put/3, id/0]).
 
 -define(REAL_MODULE, ermlia_facade).
 
@@ -55,4 +54,7 @@ find_value(_Key) ->
 
 put(_Key, _Value, _TTL) ->
   ok.
+
+id() ->
+  1.
 

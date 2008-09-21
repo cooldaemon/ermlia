@@ -82,10 +82,10 @@ handle_info(Socket, {IP, Port, Message}) ->
 handle_info(_Socket, _Message) -> ok.
 
 dispatch(Socket, IP, Port, {ping, ID, Pid}) ->
-  callback(Socket, IP, Port, ID, {pong, Pid});
+  callback(Socket, IP, Port, ID, {pong, ermlia_facade:id(), Pid});
 
-dispatch(_Socket, _IP, _Port, {pong, Pid}) ->
-  Pid ! {pong, ok};
+dispatch(_Socket, _IP, _Port, {pong, ID, Pid}) ->
+  Pid ! {pong, ID};
 
 dispatch(Socket, IP, Port, {find_node, ID, TargetID, Pid}) ->
   callback(Socket, IP, Port, ID, {

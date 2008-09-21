@@ -33,7 +33,7 @@
 -export([start_from_shell/1]). 
 
 -export([join/2]). 
--export([put/2, get/1]). 
+-export([put/2, put/3, get/1]). 
 
 start(Port) ->
   application:set_env(ermlia, port, Port),
@@ -48,11 +48,18 @@ start_from_shell([Port]) ->
   start(list_to_integer(atom_to_list(Port))).
 
 %% @equiv ermlia_facade:join(IP, Port)
-join(IP, Port) -> ermlia_facade:join(IP, Port).
+join(IP, Port) ->
+  ermlia_facade:join(IP, Port).
 
-%% @equiv ermlia_facade:put(Key, Value)
-put(Key, Value) -> ermlia_facade:put(Key, Value).
+%% @equiv put(Key, Value, 0)
+put(Key, Value) ->
+  put(Key, Value, 0).
+
+%% @equiv ermlia_facade:put(Key, Value, TTL)
+put(Key, Value, TTL) ->
+  ermlia_facade:put(Key, Value, TTL).
 
 %% @equiv ermlia_facade:get(Key)
-get(Key) -> ermlia_facade:get(Key).
+get(Key) ->
+  ermlia_facade:get(Key).
 

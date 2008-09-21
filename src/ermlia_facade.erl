@@ -22,9 +22,9 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
--export([set_id/1]).                                     % for test
--export([publish/2, publish/3, get/1, join/2]).          % for local
--export([add_node/3, find_node/1, find_value/1, put/3]). % for remote
+-export([set_id/1]).                                           % for test
+-export([publish/2, publish/3, get/1, join/2]).                % for local
+-export([add_node/3, find_node/1, find_value/1, put/3, id/0]). % for remote
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -185,10 +185,10 @@ ping_pong(_I, _Other) ->
 ping(IP, Port) ->
   ermlia_node_pipe:ping(IP, Port, id()).
 
-pong(I, SessionKey, ok) ->
-  ermlia_kbukets:pong(I, SessionKey);
-pong(_I, _SessionKey, _Other) ->
-  ok.
+pong(_I, _SessionKey, fail) ->
+  ok;
+pong(I, SessionKey, _ID) ->
+  ermlia_kbukets:pong(I, SessionKey).
 
 find_node(ID) ->
   ermlia_kbukets:lookup(i(ID)).
