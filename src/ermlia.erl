@@ -30,8 +30,6 @@
 -module(ermlia).
 
 -export([start/1, stop/0]). 
--export([start_from_shell/1]). 
-
 -export([join/2]). 
 -export([put/2, put/3, get/1]). 
 
@@ -43,9 +41,6 @@ start(Port) ->
 stop() ->
   application:stop(ermlia),
   erljob:stop().
-
-start_from_shell([Port]) ->
-  start(list_to_integer(atom_to_list(Port))).
 
 %% @equiv ermlia_facade:join(IP, Port)
 join(IP, Port) ->
