@@ -50,9 +50,9 @@ join(IP, Port) ->
 put(Key, Value) ->
   put(Key, Value, 0).
 
-%% @equiv ermlia_facade:put(Key, Value, TTL)
+%% @equiv ermlia_facade:publish(Key, Value, TTL)
 put(Key, Value, TTL) ->
-  ermlia_facade:put(Key, Value, TTL).
+  ermlia_facade:publish(Key, Value, TTL).
 
 %% @equiv ermlia_facade:get(Key)
 get(Key) ->

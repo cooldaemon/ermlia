@@ -23,7 +23,7 @@
 
 -export([start_link/0, stop/0]).
 -export([set_id/1]).                                           % for test
--export([publish/2, publish/3, get/1, join/2]).                % for local
+-export([publish/3, get/1, join/2]).                           % for local
 -export([add_node/3, find_node/1, find_value/1, put/3, id/0]). % for remote
 -export([
   init/1,
@@ -42,9 +42,6 @@ stop() ->
 
 set_id(ID) ->
   gen_server:cast(?MODULE, {set_id, ID}).
-
-publish(Key, Value) ->
-  publish(Key, Value, 0).
 
 publish(Key, Value, TTL) ->
   put(Key, Value, TTL),

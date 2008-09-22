@@ -74,7 +74,7 @@ for_local() -> [].
 for_local(_Conf) ->
   ?assertMatch(ermlia_facade:join(?IP, ?PORT_FOR_LOCAL_TEST), ok, case1),
 
-  ?assertMatch(ermlia_facade:publish(foo, bar), ok, case2),
+  ?assertMatch(ermlia_facade:publish(foo, bar, 0), ok, case2),
   ?assertMatch(ermlia_facade:get(foo), bar, case3),
 
   ?assertMatch(ermlia_facade:get(baz), undefined, case4),
