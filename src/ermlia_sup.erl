@@ -22,8 +22,11 @@
 -export([start_link/1, stop/0]).
 -export([init/1]).
 
-start_link(Port) -> sup_utils:start_link(?MODULE, [Port]).
-stop() -> sup_utils:stop(?MODULE).
+start_link(Port) ->
+  sup_utils:start_link(?MODULE, [Port]).
+
+stop() ->
+  sup_utils:stop(?MODULE).
 
 init([Port]) ->
   sup_utils:spec([
@@ -31,10 +34,6 @@ init([Port]) ->
     {sup, ermlia_data_store_sup},
     {worker, ermlia_facade},
     {worker, ermlia_node_pipe, [Port]},
-    {worker, mochiweb_http, start, [[
-      {port, Port},
-      {name, {local, ermlia_web}},
-      {loop, {ermlia_web, dispatch}}
-    ]]}
+    {worker, ermlia_web, [Port]}
   ]).
 

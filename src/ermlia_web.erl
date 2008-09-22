@@ -18,7 +18,19 @@
 
 -module(ermlia_web).
 
+-export([start_link/1, stop/0]).
 -export([dispatch/1]).
 
-dispatch(Req) -> Req:not_found().
+start_link(Port) ->
+  mochiweb_http:start([
+    {port, Port},
+    {name, {local, ?MODULE}},
+    {loop, {?MODULE, dispatch}}
+  ]).
+
+stop() ->
+  mochiweb_http:stop(?MODULE).
+
+dispatch(Req) ->
+  Req:not_found().
 
