@@ -40,9 +40,13 @@ start_link(I) ->
 stop(ServerRef) ->
   gen_server:call(ServerRef, stop).
 
+add(I, _ID, _IP, _Port) when I < 0; 159 < I ->
+  ok;
 add(I, ID, IP, Port) ->
   gen_server:call(i_to_name(I), {add, {ID, IP, Port}}).
 
+lookup(I) when I < 0; 159 < I ->
+  [];
 lookup(I) ->
   lookup(I, 1, get_nodes(I)).
 
