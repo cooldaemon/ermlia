@@ -23,6 +23,7 @@
 
 -export([start_link/1, stop/1]).
 -export([put/3, put/4, get/2]).
+-export([dump/0]).
 -export([clean/1]).
 -export([
   init/1,
@@ -36,12 +37,20 @@ start_link(I) ->
 stop(ServerRef) ->
   gen_server:call(ServerRef, stop).
 
-put(I, Key, Value) -> put(I, Key, Value, 0).
+put(I, Key, Value) ->
+  put(I, Key, Value, 0).
 
 put(I, Key, Value, TTL) ->
   gen_server:cast(i_to_name(I), {put, Key, Value, TTL}).
 
-get(I, Key) -> gen_server:call(i_to_name(I), {get, Key}).
+get(I, Key) ->
+  gen_server:call(i_to_name(I), {get, Key}).
+
+dump() ->
+  lists:map(
+    fun (I) -> {I, gen_server:call(i_to_name(I), dump)} end,
+    lists:seq(0, 159)
+  ).
 
 i_to_name(I) ->
   list_utils:concat_atom([?MODULE, "_", I]).
@@ -56,9 +65,14 @@ clean(I) ->
 handle_call({get, Key}, _From, State={Ets}) ->
   {reply, lookup(ets:lookup(Ets, Key)), State};
 
-handle_call(stop, _From, State) -> {stop, normal, stopped, State};
+handle_call(dump, _From, State={Ets}) ->
+  {reply, ets:tab2list(Ets), State};
 
-handle_call(_Message, _From, State) -> {reply, ok, State}.
+handle_call(stop, _From, State) ->
+  {stop, normal, stopped, State};
+
+handle_call(_Message, _From, State) ->
+  {reply, ok, State}.
 
 handle_cast({put, Key, Value, TTL}, State={Ets}) ->
   ets:delete(Ets, Key),

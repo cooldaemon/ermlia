@@ -50,5 +50,15 @@ testcase1(_Conf) ->
   ermlia_data_store:put(1, foo, qux),
   ?assertEqual(ermlia_data_store:get(0, foo), undefined, case5),
   ?assertEqual(ermlia_data_store:get(1, foo), qux, case6),
+
+  [DumpHead | DumpTails] = ermlia_data_store:dump(),
+  ?assertMatch(DumpHead, {0, [{foo, {baz, _TTL}}]}, case7),
+  ?assertEqual(
+    DumpTails,
+       [{1, [{foo, {qux, 0}}]}]
+    ++ lists:map(fun (N) -> {N, []} end, lists:seq(2, 159)),
+    case8
+  ),
+
   ok.
 

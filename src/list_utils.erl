@@ -22,7 +22,7 @@
 -export([pmap/2, pmap/3, pmap/4]).
 -export([pmap_coordinator/4, pmap_supervisor/4, pmap_worker/3]).
 -export([split/2, split_map/3, split_foldl/4]).
--export([concat_atom/1]).
+-export([concat_atom/1, join/2]).
 -export([cycle/2]).
 -export([test/0]).
 
@@ -133,14 +133,29 @@ concat_atom(Lists) ->
 
 concat_atom([], Results) ->
   list_to_atom(Results);
-concat_atom([Elem | Lists], Results) when is_atom(Elem) ->
-  concat_atom(Lists, Results ++ atom_to_list(Elem));
-concat_atom([Elem | Lists], Results) when is_integer(Elem) ->
-  concat_atom(Lists, Results ++ integer_to_list(Elem));
-concat_atom([Elem | Lists], Results) when is_list(Elem) ->
-  concat_atom(Lists, Results ++ Elem);
-concat_atom([_Elem | Lists], Results) ->
-  concat_atom(Lists, Results).
+concat_atom([Elem | Lists], Results) ->
+  concat_atom(Lists, Results ++ to_list(Elem)).
+
+to_list(Target) when is_atom(Target) ->
+  atom_to_list(Target);
+to_list(Target) when is_integer(Target) ->
+  integer_to_list(Target);
+to_list(Target) when is_binary(Target) ->
+  binary_to_list(Target);
+to_list(Target) when is_list(Target) ->
+  Target;
+to_list(_Target) ->
+  [].
+
+join(Delimiter, Lists) ->
+  join(Delimiter, Lists, []).
+
+join(_Delimiter, [], Results) ->
+  lists:reverse(Results);
+join(Delimiter, [Elem | Lists], []) ->
+  join(Delimiter, Lists, [Elem]);
+join(Delimiter, [Elem | Lists], Results) ->
+  join(Delimiter, Lists, [Elem | [Delimiter | Results]]).
 
 cycle(Elem, Count) ->
   lists:flatten(lists:map(fun (_N) -> Elem end, lists:seq(1, Count))).
@@ -151,6 +166,7 @@ test() ->
   test_split_map(),
   test_split_foldl(),
   test_concat_atom(),
+  test_join(),
   test_cycle(),
   ok.
 
@@ -192,7 +208,12 @@ test_split_foldl() ->
   ok.
 
 test_concat_atom() ->
-  abc123foo = concat_atom([abc, 123, "foo", {}, self()]),
+  abc123foobar = concat_atom([abc, 123, "foo", <<"bar">>, {}, self()]),
+  ok.
+
+test_join() ->
+  Delimiter = {foo, bar},
+  [baz, Delimiter, {}, Delimiter, quu] = join(Delimiter, [baz, {}, quu]),
   ok.
 
 test_cycle() ->

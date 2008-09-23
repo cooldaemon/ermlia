@@ -32,6 +32,7 @@
 -export([start/1, stop/0]). 
 -export([join/2]). 
 -export([put/2, put/3, get/1]). 
+-export([dump/0]). 
 
 start(Port) ->
   application:set_env(ermlia, port, Port),
@@ -57,4 +58,8 @@ put(Key, Value, TTL) ->
 %% @equiv ermlia_facade:get(Key)
 get(Key) ->
   ermlia_facade:get(Key).
+
+%% @equiv ermlia_facade:dump()
+dump() ->
+  ermlia_facade:dump().
 

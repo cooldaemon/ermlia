@@ -22,7 +22,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
--export([set_id/1]).                                           % for test
+-export([set_id/1, dump/0]).                                   % for test
 -export([publish/2, publish/3, get/1, join/2]).                % for local
 -export([add_node/3, find_node/1, find_value/1, put/3, id/0]). % for remote
 -export([
@@ -42,6 +42,13 @@ stop() ->
 
 set_id(ID) ->
   gen_server:cast(?MODULE, {set_id, ID}).
+
+dump() ->
+  [
+    {id, id()},
+    {data, ermlia_data_store:dump()},
+    {kbukets, ermlia_kbukets:dump()}
+  ].
 
 publish(Key, Value) ->
   publish(Key, Value, 0).
