@@ -37,7 +37,7 @@ loop(Req) ->
 dispatch(Req, _Method, "/") ->
   ok(Req, <<"top">>, [<<"ermlia top page.">>, {br}]);
 
-dispatch(Req, _Method, "/dump") ->
+dispatch(Req, _Method, "/dump" ++ _Path) ->
   Dump = ermlia:dump(),
   ID = integer_to_list(proplists:get_value(id, Dump)),
   Data = proplists:get_value(data, Dump),
@@ -60,14 +60,11 @@ dispatch(Req, _Method, "/dump") ->
     }
   ]));
 
-dispatch(Req, _Method, Path) ->
-  "/" ++ File = Path,
-  case lists:suffix("css", File) of
-    true ->
-      Req:serve_file(File, docroot());
-    _Other ->
-      Req:not_found()
-  end.
+dispatch(Req, _Method, "/css" ++ Path) ->
+  Req:serve_file("css" ++ Path, docroot());
+
+dispatch(Req, _Method, _Path) ->
+  Req:not_found().
 
 ok(Req, Title, Body) ->
   Req:ok({
