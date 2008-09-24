@@ -22,7 +22,7 @@
 -behaviour(gen_server).
 
 -export([start_link/1, stop/1]).
--export([add/4, lookup/1]).
+-export([add/4, lookup/1, dump/0]).
 -export([pong/2, ping_timeout/1]).
 -export([
   init/1,
@@ -63,6 +63,12 @@ get_nodes(I) when I < 0; 159 < I ->
 get_nodes(I) ->
   gen_server:call(i_to_name(I), get_nodes).
 
+dump() ->
+  lists:map(
+    fun (I) -> {I, gen_server:call(i_to_name(I), dump)} end,
+    lists:seq(0, 159)
+  ).
+
 pong(I, SessionKey) ->
   gen_server:cast(i_to_name(I), {pong, SessionKey}).
 
@@ -78,6 +84,9 @@ init(_Args) ->
 
 handle_call(get_nodes, _From, {Nodes, _AddNodes}=State) ->
   {reply, Nodes, State};
+
+handle_call(dump, _From, State) ->
+  {reply, State, State};
 
 handle_call(stop, _From, State) ->
   {stop, normal, stopped, State};

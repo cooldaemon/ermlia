@@ -80,6 +80,12 @@ for_local(_Conf) ->
   ?assertMatch(ermlia_facade:get(baz), undefined, case4),
   ?assertMatch(ermlia_facade:get(quu), quux, case5),
 
+  ?assertMatch(
+    ermlia_facade:dump(),
+    [{id, _ID}, {data, _Data}, {kbukets, _Kbukets}],
+    case6
+  ),
+
   ok.
 
 add_nodes(H, T) ->

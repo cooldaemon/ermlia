@@ -71,28 +71,36 @@ testcase1(_Conf) ->
     case12
   ),
 
+  ?assertEqual(
+    ermlia_kbukets:dump(),
+       [{0, {get_nodes(1, 2) ++ get_nodes(5, 22), []}}]
+    ++ lists:map(fun (N) -> {N, {[], []}}  end, lists:seq(1, 2))
+    ++ lists:map(fun (N) -> {N, {[get_node(N)], []}} end, lists:seq(3, 4))
+    ++ lists:map(fun (N) -> {N, {[], []}}  end, lists:seq(5, 159)),
+    case13
+  ),
+
   {buckets_is_full, SessionKey1, Node1} = add_node(23),
-  ?assertEqual(Node1, get_node(1), case13),
+  ?assertEqual(Node1, get_node(1), case14),
   ?assertEqual(
     ermlia_kbukets:lookup(0),
     [get_node(2)] ++ get_nodes(5, 22) ++ [get_node(3)],
-    case14
+    case15
   ),
 
   ermlia_kbukets:pong(0, SessionKey1),
-  case lists:last(ermlia_kbukets:lookup(0)) of
-    {1, {127, 0, 0, 1}, 10001, _RTT} ->
-      ok;
-    OtherNode -> 
-      ct:fail({case15, OtherNode})
-  end,
+  ?assertMatch(
+    lists:last(ermlia_kbukets:lookup(0)),
+    {1, {127, 0, 0, 1}, 10001, _RTT},
+    case16
+  ),
 
   {buckets_is_full, _SessionKey2, Node2} = add_node(23),
-  ?assertEqual(Node2, get_node(2), case16),
+  ?assertEqual(Node2, get_node(2), case17),
 
   erljob:set_interval(ermlia_kbukets_ping_timeout, 100),
   timer:sleep(3500),
-  ?assertEqual(lists:last(ermlia_kbukets:lookup(0)), get_node(23), case17),
+  ?assertEqual(lists:last(ermlia_kbukets:lookup(0)), get_node(23), case18),
 
   ok.
 
