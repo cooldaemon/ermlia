@@ -19,9 +19,11 @@
 -module(ermlia_timeout_nodes).
 
 -export([start_link/1, stop/1]).
--export([put/4, get/2]).
+-export([put/3, get/2]).
 -export([dump/1]).
 -export([clean/1]).
+
+-define(KEEP_TIME, 3600).
 
 start_link(I) ->
   ermlia_ets_server:start_link(?MODULE, I).
@@ -29,8 +31,8 @@ start_link(I) ->
 stop(ServerRef) ->
   ermlia_ets_server:stop(ServerRef).
 
-put(I, Key, Value, TTL) ->
-  ermlia_ets_server:put(?MODULE, I, Key, Value, TTL).
+put(I, Key, Value) ->
+  ermlia_ets_server:put(?MODULE, I, Key, Value, ?KEEP_TIME).
 
 get(I, Key) ->
   ermlia_ets_server:get(?MODULE, I, Key).
@@ -40,4 +42,4 @@ dump(I) ->
 
 clean(I) ->
   ermlia_ets_server:clean(?MODULE, I).
-  
+

@@ -27,7 +27,6 @@ all() -> [testcase1].
 init_per_testcase(_TestCase, Config) ->
   erljob:start(),
   ermlia_timeout_nodes_sup:start_link(),
-  erljob:set_interval(ermlia_timeout_nodes_cleaner, 1),
   Config.
 
 end_per_testcase(_TestCase, _Config) ->
@@ -39,17 +38,14 @@ testcase1() -> [].
 testcase1(_Conf) ->
   ?assertEqual(ermlia_timeout_nodes:get(0, 1), undefined, case1),
 
-  ermlia_timeout_nodes:put(0, 1, get_node(1), 3),
+  ermlia_timeout_nodes:put(0, 1, get_node(1)),
   ?assertEqual(ermlia_timeout_nodes:get(0, 1), get_node(1), case2),
-
-  timer:sleep(3000),
-  ?assertEqual(ermlia_timeout_nodes:get(0, 1), undefined, case3),
 
   [DumpHead | _DumpTails] = ermlia_timeout_nodes_sup:dump(),
   ?assertMatch(
     DumpHead,
     {0, [{1, {{1, {127, 0, 0, 1}, 10001, unknown}, _TTL}}]},
-    case4
+    case3
   ),
 
   ok.

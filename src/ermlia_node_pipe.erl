@@ -26,9 +26,9 @@
 -export([handle_call/4, handle_info/2]).
 -export([dispatch/4]).
 
--define(PING_TIMEOUT, 3000).
--define(FIND_NODE_TIMEOUT, 3000).
--define(FIND_VALUE_TIMEOUT, 3000).
+-define(PING_TIMEOUT, 500).
+-define(FIND_NODE_TIMEOUT, 500).
+-define(FIND_VALUE_TIMEOUT, 500).
 
 start_link(Port) ->
   udp_server:receiver_start_link(

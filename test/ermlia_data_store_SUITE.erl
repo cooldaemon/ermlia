@@ -42,9 +42,9 @@ testcase1(_Conf) ->
   ermlia_data_store:put(0, foo, bar, 0),
   ?assertEqual(ermlia_data_store:get(0, foo), bar, case2),
 
-  ermlia_data_store:put(0, foo, baz, 3),
+  ermlia_data_store:put(0, foo, baz, 1),
   ?assertEqual(ermlia_data_store:get(0, foo), baz, case3),
-  timer:sleep(3000),
+  timer:sleep(1100),
   ?assertEqual(ermlia_data_store:get(0, foo), undefined, case4),
 
   ermlia_data_store:put(1, foo, quu, 0),

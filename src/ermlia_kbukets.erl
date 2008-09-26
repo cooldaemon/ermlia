@@ -32,7 +32,7 @@
 
 -define(LIST_MAX_LENGTH, 20).
 -define(LOOKUP_MAX_LENGTH, 20).
--define(PING_TIMEOUT, 3000000).
+-define(PING_TIMEOUT, 500000).
 
 start_link(I) ->
   gen_server:start_link({local, i_to_name(I)}, ?MODULE, [], []).

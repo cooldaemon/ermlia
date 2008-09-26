@@ -32,6 +32,7 @@ init_per_testcase(_TestCase, Config) ->
   erljob:start(),
   ermlia_data_store_sup:start_link(),
   ermlia_kbukets_sup:start_link(),
+  ermlia_timeout_nodes_sup:start_link(),
   ermlia_mock_node_pipe:setup(),
   ermlia_facade:start_link(),
   Config.
@@ -40,6 +41,7 @@ end_per_testcase(_TestCase, _Config) ->
   ermlia_facade:stop(),
   crypto:stop(),
   ermlia_mock_node_pipe:cleanup(),
+  ermlia_timeout_nodes_sup:stop(),
   ermlia_kbukets_sup:stop(),
   ermlia_data_store_sup:stop(),
   erljob:stop(),
@@ -82,7 +84,7 @@ for_local(_Conf) ->
 
   ?assertMatch(
     ermlia_facade:dump(),
-    [{id, _ID}, {data, _Data}, {kbukets, _Kbukets}],
+    [{id, _ID}, {data, _Data}, {kbukets, _Kbukets}, {timeout, _Timeout}],
     case6
   ),
 

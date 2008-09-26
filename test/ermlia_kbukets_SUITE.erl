@@ -99,7 +99,7 @@ testcase1(_Conf) ->
   ?assertEqual(Node2, get_node(2), case17),
 
   erljob:set_interval(ermlia_kbukets_ping_timeout, 100),
-  timer:sleep(3500),
+  timer:sleep(700),
   ?assertEqual(lists:last(ermlia_kbukets:lookup(0)), get_node(23), case18),
 
   ok.
