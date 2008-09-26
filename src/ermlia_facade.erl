@@ -47,7 +47,8 @@ dump() ->
   [
     {id, id()},
     {data, ermlia_data_store_sup:dump()},
-    {kbukets, ermlia_kbukets:dump()}
+    {kbukets, ermlia_kbukets:dump()},
+    {timeout, ermlia_timeout_nodes_sup:dump()}
   ].
 
 publish(Key, Value, TTL) ->

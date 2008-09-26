@@ -42,6 +42,7 @@ dispatch(Req, _Method, "/dump" ++ _Path) ->
   ID = integer_to_list(proplists:get_value(id, Dump)),
   Data = proplists:get_value(data, Dump),
   Kbukets = proplists:get_value(kbukets, Dump),
+  Timeout = proplists:get_value(timeout, Dump),
   ok(Req, <<"dump">>, tables([
     {
       <<"Status">>,
@@ -55,8 +56,13 @@ dispatch(Req, _Method, "/dump" ++ _Path) ->
     },
     {
       <<"K-Bukets">>,
-      [tr(th, [<<"I">>, <<"Nodes">>, <<"AddNodes">>])],
+      [tr(th, [<<"I">>, <<"Nodes">>, <<"Add Nodes">>])],
       trs(Kbukets, fun trs_for_kbukets/3, fun tds_for_kbukets/1)
+    },
+    {
+      <<"Timeout Nodes">>,
+      [tr(th, [<<"I">>, <<"Values">>])],
+      trs(Timeout, fun trs_for_data/3, fun tds_for_data/1)
     }
   ]));
 
