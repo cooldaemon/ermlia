@@ -1,6 +1,6 @@
 %% @author Masahito Ikuta <cooldaemon@gmail.com> [http://d.hatena.ne.jp/cooldaemon/]
 %% @copyright Masahito Ikuta 2008
-%% @doc This module is supervisor for the data stores.
+%% @doc This module is a store for timeout nodes.
 
 %% Copyright 2008 Masahito Ikuta
 %%
@@ -16,22 +16,28 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(ermlia_data_store_sup).
--behaviour(supervisor).
+-module(ermlia_timeout_nodes).
 
--export([start_link/0, stop/0]).
--export([dump/0]).
--export([init/1]).
+-export([start_link/1, stop/1]).
+-export([put/4, get/2]).
+-export([dump/1]).
+-export([clean/1]).
 
-start_link() ->
-  ermlia_ets_server_sup:start_link(ermlia_data_store).
+start_link(I) ->
+  ermlia_ets_server:start_link(?MODULE, I).
 
-stop() ->
-  ermlia_ets_server_sup:stop(ermlia_data_store).
+stop(ServerRef) ->
+  ermlia_ets_server:stop(ServerRef).
 
-dump() ->
-  ermlia_ets_server_sup:dump(ermlia_data_store).
+put(I, Key, Value, TTL) ->
+  ermlia_ets_server:put(?MODULE, I, Key, Value, TTL).
 
-init(_Args) ->
-  ermlia_ets_server_sup:init([ermlia_data_store]).
+get(I, Key) ->
+  ermlia_ets_server:get(?MODULE, I, Key).
 
+dump(I) ->
+  ermlia_ets_server:dump(?MODULE, I).
+
+clean(I) ->
+  ermlia_ets_server:clean(?MODULE, I).
+  

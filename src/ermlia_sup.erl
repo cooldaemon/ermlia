@@ -31,6 +31,7 @@ stop() ->
 init([Port]) ->
   sup_utils:spec([
     {sup, ermlia_kbukets_sup},
+    {sup, ermlia_timeout_nodes_sup},
     {sup, ermlia_data_store_sup},
     {worker, ermlia_facade},
     {worker, ermlia_node_pipe, [Port]},

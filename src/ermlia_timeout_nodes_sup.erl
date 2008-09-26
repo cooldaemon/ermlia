@@ -1,6 +1,6 @@
 %% @author Masahito Ikuta <cooldaemon@gmail.com> [http://d.hatena.ne.jp/cooldaemon/]
 %% @copyright Masahito Ikuta 2008
-%% @doc This module is supervisor for the data stores.
+%% @doc This module is supervisor for the timeout nodes stores.
 
 %% Copyright 2008 Masahito Ikuta
 %%
@@ -16,7 +16,7 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
--module(ermlia_data_store_sup).
+-module(ermlia_timeout_nodes_sup).
 -behaviour(supervisor).
 
 -export([start_link/0, stop/0]).
@@ -24,14 +24,14 @@
 -export([init/1]).
 
 start_link() ->
-  ermlia_ets_server_sup:start_link(ermlia_data_store).
+  ermlia_ets_server_sup:start_link(ermlia_timeout_nodes).
 
 stop() ->
-  ermlia_ets_server_sup:stop(ermlia_data_store).
-
+  ermlia_ets_server_sup:stop(ermlia_timeout_nodes).
+  
 dump() ->
-  ermlia_ets_server_sup:dump(ermlia_data_store).
+  ermlia_ets_server_sup:dump(ermlia_timeout_nodes).
 
 init(_Args) ->
-  ermlia_ets_server_sup:init([ermlia_data_store]).
+  ermlia_ets_server_sup:init([ermlia_timeout_nodes]).
 

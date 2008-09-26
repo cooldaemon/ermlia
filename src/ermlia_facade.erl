@@ -46,7 +46,7 @@ set_id(ID) ->
 dump() ->
   [
     {id, id()},
-    {data, ermlia_data_store:dump()},
+    {data, ermlia_data_store_sup:dump()},
     {kbukets, ermlia_kbukets:dump()}
   ].
 

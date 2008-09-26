@@ -39,7 +39,7 @@ testcase1() -> [].
 testcase1(_Conf) ->
   ?assertEqual(ermlia_data_store:get(0, foo), undefined, case1),
 
-  ermlia_data_store:put(0, foo, bar),
+  ermlia_data_store:put(0, foo, bar, 0),
   ?assertEqual(ermlia_data_store:get(0, foo), bar, case2),
 
   ermlia_data_store:put(0, foo, baz, 3),
@@ -47,15 +47,15 @@ testcase1(_Conf) ->
   timer:sleep(3000),
   ?assertEqual(ermlia_data_store:get(0, foo), undefined, case4),
 
-  ermlia_data_store:put(1, foo, qux),
+  ermlia_data_store:put(1, foo, quu, 0),
   ?assertEqual(ermlia_data_store:get(0, foo), undefined, case5),
-  ?assertEqual(ermlia_data_store:get(1, foo), qux, case6),
+  ?assertEqual(ermlia_data_store:get(1, foo), quu, case6),
 
-  [DumpHead | DumpTails] = ermlia_data_store:dump(),
+  [DumpHead | DumpTails] = ermlia_data_store_sup:dump(),
   ?assertMatch(DumpHead, {0, [{foo, {baz, _TTL}}]}, case7),
   ?assertEqual(
     DumpTails,
-       [{1, [{foo, {qux, 0}}]}]
+       [{1, [{foo, {quu, 0}}]}]
     ++ lists:map(fun (N) -> {N, []} end, lists:seq(2, 159)),
     case8
   ),
