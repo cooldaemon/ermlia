@@ -95,8 +95,8 @@ get(Key, KeyID, TermNodes, Nodes) ->
     NewNodes, NewTermNodes ++ TermNodes,
     concat_find_value_results(
       list_utils:pmap(
-        fun ({_ID, IP, Port, _RTT}) ->
-          ermlia_node_pipe:find_value(IP, Port, MyID, Key)
+        fun ({_ID, IP, Port, _RTT}=Node) ->
+          {Node, ermlia_node_pipe:find_value(IP, Port, MyID, Key)}
         end,
         NewTermNodes
       )
@@ -131,17 +131,34 @@ filter_nodes(SortedNodes, []) ->
 filter_nodes(SortedNodes, TermNodes) ->
   lists:filter(
     fun ({ID, _IP, _Port, _RTT}) ->
-      lists:any(
-        fun ({IDT, _IPT, _PortT, _RTTT}) ->
+      case ermlia_timeout_nodes:get(i(ID), ID) of
+        undefined -> true;
+        _Node     -> false
+      end
+    end,
+    lists:filter(
+      fun ({ID, _IP, _Port, _RTT}) ->
+        lists:any(
+          fun ({IDT, _IPT, _PortT, _RTTT}) ->
+            if
+              ID =:= IDT -> false;
+              true       -> true
+            end
+          end,
+          TermNodes
+        )
+      end,
+      lists:filter(
+        fun ({ID, _IP, _Port, _RTT}) ->
+          MyID = id(),
           if
-            ID =:= IDT -> false;
-            true       -> true
+            ID =:= MyID -> false;
+            true        -> true
           end
         end,
-        TermNodes
+        SortedNodes
       )
-    end,
-    SortedNodes
+    )
   ).
 
 concat_find_value_results(Results) ->
@@ -149,12 +166,20 @@ concat_find_value_results(Results) ->
   
 concat_find_value_results([], Nodes) ->
   {nodes, Nodes};
-concat_find_value_results([{value, Value} | _Results], _Nodes) ->
+concat_find_value_results([{_Node, {value, Value}} | _Results], _Nodes) ->
   {value, Value};
-concat_find_value_results([{nodes, NewNodes} | Results], Nodes) ->
+concat_find_value_results([{_Node, {nodes, NewNodes}} | Results], Nodes) ->
   concat_find_value_results(Results, Nodes ++ NewNodes);
+concat_find_value_results([{Node, fail} | Results], Nodes) ->
+  fail_node(Node),
+  concat_find_value_results(Results, Nodes);
 concat_find_value_results([_Other | Results], Nodes) ->
   concat_find_value_results(Results, Nodes).
+
+fail_node({ID, _IP, _Port, _RTT}=Node) ->
+  I = i(ID),
+  ermlia_kbukets:delete(I, ID),
+  ermlia_timeout_nodes:put(I, ID, Node).
 
 join(IP, Port) ->
   find_and_add_nodes(IP, Port, ermlia_node_pipe:ping(IP, Port, id())).
@@ -167,8 +192,15 @@ find_and_add_nodes(IP, Port, ID) ->
   add_nodes(Nodes),
   find_nodes(Nodes).
 
-add_nodes(fail) -> fail;
-add_nodes([])   -> ok;
+add_nodes(Node, fail) ->
+  fail_node(Node);
+add_nodes(_Node, Nodes) ->
+  add_nodes(Nodes).
+
+add_nodes(fail) ->
+  fail;
+add_nodes([]) ->
+  ok;
 add_nodes([{ID, IP, Port, _RTT} | Nodes]) ->
   add_node(ID, IP, Port),
   add_nodes(Nodes).
@@ -177,8 +209,8 @@ find_nodes(fail) -> fail;
 find_nodes(Nodes) ->
   MyID = id(),
   list_utils:pmap(
-    fun ({_ID, IP, Port, _RTT}) ->
-      add_nodes(ermlia_node_pipe:find_node(IP, Port, MyID, MyID))
+    fun ({_ID, IP, Port, _RTT}=Node) ->
+      add_nodes(Node, ermlia_node_pipe:find_node(IP, Port, MyID, MyID))
     end,
     Nodes
   ),
@@ -188,17 +220,18 @@ add_node(ID, IP, Port) ->
   I = i(ID),
   ping_pong(I, ermlia_kbukets:add(I, ID, IP, Port)).
 
-ping_pong(I, {buckets_is_full, SessionKey, {_ID, IP, Port, _RTT}}) ->
-  pong(I, SessionKey, ping(IP, Port));
+ping_pong(I, {buckets_is_full, SessionKey, {_ID, IP, Port, _RTT}=Node}) ->
+  pong(I, SessionKey, Node, ping(IP, Port));
 ping_pong(_I, _Other) ->
   ok.
 
 ping(IP, Port) ->
   ermlia_node_pipe:ping(IP, Port, id()).
 
-pong(_I, _SessionKey, fail) ->
+pong(_I, _SessionKey, Node, fail) ->
+  fail_node(Node),
   ok;
-pong(I, SessionKey, _ID) ->
+pong(I, SessionKey, _Node, _ID) ->
   ermlia_kbukets:pong(I, SessionKey).
 
 find_node(ID) ->

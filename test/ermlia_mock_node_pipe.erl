@@ -36,6 +36,8 @@ cleanup() ->
 ping(_IP, _Port, _ID) ->
   1.
 
+find_node(_IP, ?PORT+1, _ID, _TargetID) ->
+  fail;
 find_node(_IP, Port, _ID, _TargetID) when ?PORT =< Port ->
   BasePort = (Port - ?PORT) * 100,
   lists:map(
@@ -47,6 +49,8 @@ find_node(_IP, _Port, _ID, _TargetID) ->
 
 find_value(_IP, _Port, _ID, quu) ->
   {value, quux};
+find_value(_IP, ?PORT+2, _ID, baz) ->
+  fail;
 find_value(_IP, Port, _ID, baz) ->
   {nodes, find_node(foo, Port, foo, foo)};
 find_value(_IP, _Port, _ID, _Key) ->

@@ -22,7 +22,7 @@
 -behaviour(gen_server).
 
 -export([start_link/1, stop/1]).
--export([add/4, lookup/1, dump/0]).
+-export([add/4, delete/2, lookup/1, dump/0]).
 -export([pong/2, ping_timeout/1]).
 -export([
   init/1,
@@ -44,6 +44,11 @@ add(I, _ID, _IP, _Port) when I < 0; 159 < I ->
   ok;
 add(I, ID, IP, Port) ->
   gen_server:call(i_to_name(I), {add, {ID, IP, Port}}).
+
+delete(I, _ID) when I < 0; 159 < I ->
+  ok;
+delete(I, ID) ->
+  gen_server:cast(i_to_name(I), {delete, ID}).
 
 lookup(I) when I < 0; 159 < I ->
   [];
@@ -105,6 +110,9 @@ handle_call(
 
 handle_call(_Message, _From, State) ->
   {reply, ok, State}.
+
+handle_cast({delete, ID}, {Nodes, AddNodes}) ->
+  {noreply, {lists:keydelete(ID, 1, Nodes), AddNodes}};
 
 handle_cast({pong, SessionKey}, {_Nodes, AddNodes}=State) ->
   {noreply, add_node_from_adding_list(
