@@ -107,9 +107,21 @@ dispatch(_Socket, IP, Port, {put, ID, Key, Value, TTL}) ->
   ermlia_facade:add_node(ID, IP, Port),
   ermlia_facade:put(Key, Value, TTL);
 
-dispatch(_Socket, _IP, _Port, _Message) -> ok.
+dispatch(_Socket, _IP, _Port, _Message) ->
+  ok.
 
 callback(Socket, IP, Port, ID, Message) ->
   ermlia_facade:add_node(ID, IP, Port),
-  gen_udp:send(Socket, IP, Port, term_to_binary(Message)).
+  gen_udp:send(Socket, IP, Port, term_to_binary(Message)),
+  yield_data_to(
+    Socket, IP, Port,
+    ermlia_facade:id(),
+    ermlia_facade:get_appropriate_data(ID)
+  ).
+
+yield_data_to(_Socket, _IP, _Port, _ID, []) ->
+  ok;
+yield_data_to(Socket, IP, Port, ID, [{Key, Value, TTL} | Data]) ->
+  handle_info(Socket, {IP, Port, {put, ID, Key, Value, TTL}}),
+  yield_data_to(Socket, IP, Port, ID, Data).
 

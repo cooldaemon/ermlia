@@ -22,9 +22,13 @@
 -behaviour(gen_server).
 
 -export([start_link/0, stop/0]).
--export([set_id/1, dump/0]).                                   % for test
--export([publish/3, get/1, join/2]).                           % for local
--export([add_node/3, find_node/1, find_value/1, put/3, id/0]). % for remote
+-export([set_id/1, dump/0]).         % for test
+-export([publish/3, get/1, join/2]). % for local
+-export([                            % for remote
+  add_node/3,
+  find_node/1, find_value/1,
+  put/3, get_appropriate_data/1, id/0
+]). 
 -export([
   init/1,
   handle_call/3, handle_cast/2, handle_info/2,
@@ -41,6 +45,7 @@ stop() ->
   gen_server:call(?MODULE, stop).
 
 set_id(ID) ->
+  erlang:put(ermlia_facade_id, ID),
   gen_server:cast(?MODULE, {set_id, ID}).
 
 dump() ->
@@ -129,14 +134,15 @@ merge_nodes(KeyID, Nodes, AddNodes, TermNodes) ->
 filter_nodes(SortedNodes, []) ->
   SortedNodes;
 filter_nodes(SortedNodes, TermNodes) ->
-  lists:filter(
-    fun ({ID, _IP, _Port, _RTT}) ->
-      case ermlia_timeout_nodes:get(i(ID), ID) of
-        undefined -> true;
-        _Node     -> false
-      end
-    end,
-    lists:filter(
+  list_utils:filter(
+    [
+      fun ({ID, _IP, _Port, _RTT}) ->
+        MyID = id(),
+        if
+          ID =:= MyID -> false;
+          true        -> true
+        end
+      end,
       fun ({ID, _IP, _Port, _RTT}) ->
         lists:any(
           fun ({IDT, _IPT, _PortT, _RTTT}) ->
@@ -148,17 +154,14 @@ filter_nodes(SortedNodes, TermNodes) ->
           TermNodes
         )
       end,
-      lists:filter(
-        fun ({ID, _IP, _Port, _RTT}) ->
-          MyID = id(),
-          if
-            ID =:= MyID -> false;
-            true        -> true
-          end
-        end,
-        SortedNodes
-      )
-    )
+      fun ({ID, _IP, _Port, _RTT}) ->
+        case ermlia_timeout_nodes:get(i(ID), ID) of
+          undefined -> true;
+          _Node     -> false
+        end
+      end
+    ],
+    SortedNodes
   ).
 
 concat_find_value_results(Results) ->
@@ -247,6 +250,35 @@ find_value(Value, _Key) ->
 
 put(Key, Value, TTL) ->
   ermlia_data_store:put(key_to_i(Key), Key, Value, TTL).
+
+get_appropriate_data(ID) ->
+  filter_data(ID, i(ID), ermlia_data_store_sup:dump(), []).
+
+filter_data(_ID, _I, [], AppropriateData) ->
+  lists:map(
+    fun ({Key, {Value, TTL}}) -> {Key, Value, TTL} end,
+    AppropriateData
+  );
+filter_data(ID, I, [{DataI, Data} | Dump], AppropriateData)
+  when I < DataI
+->
+  filter_data(ID, I, Dump, AppropriateData ++ Data);
+filter_data(ID, I, [{_DataI, []} | Dump], AppropriateData) ->
+  filter_data(ID, I, Dump, AppropriateData);
+filter_data(ID, I, [{DataI, Data} | Dump], AppropriateData) ->
+  filter_data(
+    ID, I, Dump,
+    AppropriateData ++ lists:filter(
+      fun ({Key, {_Value, _TTL}}) ->
+        TI = i(ID, key_to_id(Key)),
+        if
+          DataI < TI -> false;
+          true       -> true
+        end
+      end,
+      Data
+    )
+  ).
 
 id() ->
   id_cache(erlang:get(ermlia_facade_id)).

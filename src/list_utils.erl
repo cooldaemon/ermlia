@@ -24,6 +24,7 @@
 -export([split/2, split_map/3, split_foldl/4]).
 -export([concat_atom/1, join/2]).
 -export([cycle/2]).
+-export([filter/2]).
 -export([test/0]).
 
 -define(SUPERVISOR_TIMEOUT, 500).
@@ -160,6 +161,21 @@ join(Delimiter, [Elem | Lists], Results) ->
 cycle(Elem, Count) ->
   lists:flatten(lists:map(fun (_N) -> Elem end, lists:seq(1, Count))).
 
+filter(Funs, Lists) when is_list(Funs) ->
+  lists:filter(
+    fun (Elem) ->
+      lists:all(
+        fun (Fun) ->
+          Fun(Elem)
+        end,
+        Funs
+      )
+    end,
+    Lists
+  );
+filter(Fun, Lists) ->
+  lists:filter(Fun, Lists).
+
 test() ->
   test_pmap(),
   test_split(),
@@ -168,6 +184,7 @@ test() ->
   test_concat_atom(),
   test_join(),
   test_cycle(),
+  test_filter(),
   ok.
 
 test_pmap() ->
@@ -220,5 +237,21 @@ test_cycle() ->
   [a, a, a, a, a] = cycle(a, 5),
   "bbbbb" = cycle("b", 5),
   [{c}, {c}, {c}, {c}, {c}] = cycle({c}, 5),
+  ok.
+
+test_filter() ->
+  Results = lists:seq(2, 10, 2),
+  Results = filter(
+    fun (N) when N rem 2 =:= 0 -> true; (_N) -> false end,
+    lists:seq(1, 10)
+  ),
+  Results2 = lists:seq(6, 20, 6),
+  Results2 = filter(
+    [
+      fun (N) when N rem 2 =:= 0 -> true; (_N) -> false end,
+      fun (N) when N rem 3 =:= 0 -> true; (_N) -> false end
+    ],
+    lists:seq(1, 20)
+  ),
   ok.
 

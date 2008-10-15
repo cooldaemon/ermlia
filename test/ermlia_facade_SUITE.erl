@@ -70,6 +70,25 @@ for_remote(_Conf) ->
     case7
   ),
 
+  <<IDfoo:160>>   = crypto:sha(term_to_binary(foo)),
+  <<IDwaldo:160>> = crypto:sha(term_to_binary(waldo)),
+  ermlia_facade:set_id(IDfoo),
+
+  ?assertEqual(ermlia_facade:put(quux, "155 158", 0), ok, case8),
+  ?assertEqual(ermlia_facade:put(bar,  "157 158", 0), ok, case9),
+  ?assertEqual(ermlia_facade:put(fred, "158 157", 0), ok, case10),
+  ?assertEqual(ermlia_facade:put(baz,  "159 159", 0), ok, case11),
+
+  % 158 = i(IDfoo, IDwaldo).
+  ?assertEqual(
+    ermlia_facade:get_appropriate_data(IDwaldo),
+    [
+      {fred, "158 157", 0},
+      {baz,  "159 159", 0},
+      {foo,  bar,       0}
+    ], case12
+  ),
+
   ok.
 
 for_local() -> [].

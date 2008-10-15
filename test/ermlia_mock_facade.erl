@@ -21,7 +21,9 @@
 -module(ermlia_mock_facade).
 
 -export([setup/0, cleanup/0]).
--export([add_node/3, find_node/1, find_value/1, put/3, id/0]).
+-export([
+  add_node/3, find_node/1, find_value/1, put/3, get_appropriate_data/1, id/0
+]).
 
 -define(REAL_MODULE, ermlia_facade).
 
@@ -54,6 +56,9 @@ find_value(_Key) ->
 
 put(_Key, _Value, _TTL) ->
   ok.
+
+get_appropriate_data(_ID) ->
+  [{foo, bar, 0}].
 
 id() ->
   1.
