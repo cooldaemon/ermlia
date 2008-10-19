@@ -12,6 +12,7 @@
 EMULATOR=beam
 EBIN=$(ROOT)/ebin
 INCLUDE=$(ROOT)/include
+SCRIPTS=$(ROOT)/scripts
 
 SOURCES = $(wildcard *.erl)
 HEADERS = $(wildcard $(INCLUDE)/include/*.hrl)
@@ -19,6 +20,7 @@ OBJECTS = $(SOURCES:%.erl=$(EBIN)/%.$(EMULATOR))
 
 APP=$(EBIN)/ermlia.app
 ELOG=$(EBIN)/elog.config
+START_SH=$(SCRIPTS)/start
 
 COMPILE_FLAGS += \
 	+warn_unused_vars +nowarn_shadow_vars +warn_unused_import
@@ -30,7 +32,7 @@ endif
 $(EBIN)/%.$(EMULATOR): %.erl
 	erlc -pa $(EBIN) -W $(COMPILE_FLAGS) -I$(INCLUDE) -o$(EBIN) $<
 
-all: $(OBJECTS) $(APP) $(ELOG)
+all: $(OBJECTS) $(APP) $(ELOG) $(START_SH)
 
 $(OBJECTS): $(HEADERS)
 
@@ -39,6 +41,10 @@ $(APP): ermlia.app.src $(ROOT)/Makefile
 
 $(ELOG): elog.config.src $(ROOT)/Makefile
 	sed -e 's;%LOGS_DIR%;$(ROOT)/log;' $< > $@
+
+$(START_SH): start.src
+	sed -e 's;%ROOT_DIR%;$(ROOT);' $< > $@
+	chmod 755 $@
 
 dialyze:
 	dialyzer --succ_typings -c ${SOURCES}

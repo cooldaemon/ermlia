@@ -21,6 +21,8 @@
 -export([start_link/1, stop/0]).
 -export([loop/1]).
 
+-define(VALUE_MAX_SIZE, 1024*1024*1024). % 1MByte
+
 start_link(Port) ->
   mochiweb_http:start([
     {port, Port},
@@ -35,9 +37,6 @@ loop(Req) ->
   dispatch(Req, Req:get(method), Req:get(path)).
 
 dispatch(Req, _Method, "/") ->
-  ok(Req, <<"top">>, [<<"ermlia top page.">>, {br}]);
-
-dispatch(Req, _Method, "/dump" ++ _Path) ->
   Dump = ermlia:dump(),
   ID = integer_to_list(proplists:get_value(id, Dump)),
   Data = proplists:get_value(data, Dump),
@@ -69,8 +68,35 @@ dispatch(Req, _Method, "/dump" ++ _Path) ->
 dispatch(Req, _Method, "/css" ++ Path) ->
   Req:serve_file("css" ++ Path, docroot());
 
+dispatch(Req, Method, "/" ++ Path)
+  when Method =:= 'GET'; Method =:= 'HEAD'
+->
+  case ermlia:get(Path) of
+    {Type, Body} -> Req:ok({Type, Body});
+    _Other       -> Req:not_found()
+  end;
+
+dispatch(Req, 'PUT', "/" ++ Path) ->
+  ermlia:put(
+    Path,
+    {
+      Req:get_header_value("Content-Type"),
+      Req:recv_body(?VALUE_MAX_SIZE)
+    },
+    list_to_integer(Req:get_header_value("x-ermlia-expire"))
+  ),
+  respond(Req, 202, "Accepted.");
+
 dispatch(Req, _Method, _Path) ->
-  Req:not_found().
+  respond(Req, 405, "Method not allowed.").
+
+respond(Req, Code, Message) ->
+  HResponse = mochiweb_headers:enter(
+    "Content-Type",
+    "text/plain",
+    mochiweb_headers:empty()
+  ),
+  Req:respond({Code, HResponse, Message}).
 
 ok(Req, Title, Body) ->
   Req:ok({
