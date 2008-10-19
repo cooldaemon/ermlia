@@ -20,12 +20,12 @@ The ermlia is Erlang implementation of Kademlia.
 Start the first node.
 
     % cd /path/to/ermlia
-    % ./start.sh 10000
+    % ./scripts/start 10000
 
 Start the second node and put a key/value on this node.
 
     % cd /path/to/ermlia
-    % ./start.sh 10001
+    % ./scripts/start 10001
     1> ermlia:join({127, 0, 0, 1}, 10000).
     2> ermlia:put(key, value).
 
