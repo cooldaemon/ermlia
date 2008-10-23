@@ -3,19 +3,21 @@
 use strict;
 use warnings;
 
-use LWP::UserAgent;
-use HTTP::Request;
-use Data::Dumper;
+use Path::Class;
 
-my $req = HTTP::Request->new(
-  'PUT',
-  'http://localhost:10000/foo'
-);
-$req->content_type('text/plain');
-$req->header('x-ermlia-expire' => 10);
-$req->content('bar');
+use FindBin qw($Bin);
+use File::Spec;
+use lib File::Spec->catfile($Bin, 'lib');
 
-my $res = LWP::UserAgent->new->request($req);
-print $res->status_line, "\n";
-print $res->content, "\n";
+use ErmliaClient;
+
+my $ec = ErmliaClient->new;
+my $put_res = $ec->put(test => 'test message.');
+print 'put code: ', $put_res->code, "\n";
+
+my $head_res = $ec->head('test');
+print 'head code: ', $head_res->code, "\n";
+
+my $get_res = $ec->get('test');
+print 'get content: ', $get_res->content, "\n";
 
