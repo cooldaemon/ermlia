@@ -49,8 +49,8 @@ dispatch(Req, _Method, "/") ->
       [tr(td, [<<"ID">>, ID])]
     },
     {
-      <<"Data">>,
-      [tr(th, [<<"I">>, <<"Values">>])],
+      <<"Indexs">>,
+      [tr(th, [<<"I">>, <<"Key, TTL">>])],
       trs(Data, fun trs_for_data/3, fun tds_for_data/1)
     },
     {
@@ -72,8 +72,9 @@ dispatch(Req, Method, "/" ++ Path)
   when Method =:= 'GET'; Method =:= 'HEAD'
 ->
   case ermlia:get(Path) of
+    undefined    -> Req:not_found();
     {Type, Body} -> Req:ok({Type, Body});
-    _Other       -> Req:not_found()
+    Other        -> Req:ok({"text/plain", io_lib:fwrite("~p", [Other])})
   end;
 
 dispatch(Req, 'PUT', "/" ++ Path) ->
@@ -155,7 +156,15 @@ trs_for_data({I, Elems}, TDsFun, TRs) ->
   [{tr, [], [{td, [], [integer_to_list(I)]}] ++ TDsFun(Elems)} | TRs].
 
 tds_for_data(Elems) ->
-  [{td, [], join_br(Elems)}].
+  [{td, [], join_br(filter_value(Elems))}].
+
+filter_value(Elems) ->
+  filter_value(Elems, []).
+
+filter_value([], Results) ->
+  Results;
+filter_value([{Key, {_Value, TTL}} | Elems], Results) ->
+  filter_value(Elems, [{Key, TTL} | Results]).
 
 trs_for_kbukets({_I, {[], []}}, _TDsFun, TRs) ->
   TRs;
@@ -170,7 +179,7 @@ tds_for_kbukets({Nodes, AddNodes}) ->
 
 join_br(Lists) ->
   list_utils:join(
-    {br}, lists:map(fun (Elem) -> io_lib:write(Elem) end, Lists)
+    {br}, lists:map(fun (Elem) -> io_lib:fwrite("~p", [Elem]) end, Lists)
   ).
 
 docroot() ->
